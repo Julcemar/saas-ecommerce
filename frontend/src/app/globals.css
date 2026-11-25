@@ -1,0 +1,330 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   TOKENS DE DESIGN SYSTEM OFICIAL (PALETA #084D6E) & SUPORTE A TEMA CLARO/ESCURO
+   ============================================================================ */
+
+:root {
+  /* Paleta Oficial da Plataforma - Light Mode */
+  --brand-primary: #084D6E;
+  --brand-primary-hover: #05354D;
+  --brand-accent: #00B4D8;
+  --brand-secondary-accent: #F59E0B;
+  --bg-main: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F1F5F9;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --border-color: #E2E8F0;
+  --status-success: #10B981;
+  --status-warning: #F59E0B;
+  --status-error: #EF4444;
+  --status-info: #0284C7;
+
+  /* Variáveis dinâmicas para a vitrine do cliente */
+  --color-primary: #084D6E;
+  --color-secondary: #00B4D8;
+}
+
+[data-theme="dark"],
+.dark {
+  /* Paleta Oficial da Plataforma - Dark Mode */
+  --brand-primary: #2B9ED8;
+  --brand-primary-hover: #4DB3E6;
+  --brand-accent: #00B4D8;
+  --brand-secondary-accent: #F59E0B;
+  --bg-main: #06111A;
+  --bg-surface: #0C1E2C;
+  --bg-subtle: #132C3F;
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --border-color: #1E3A52;
+  --status-success: #34D399;
+  --status-warning: #FBBF24;
+  --status-error: #F87171;
+  --status-info: #38BDF8;
+
+  --color-primary: #2B9ED8;
+  --color-secondary: #00B4D8;
+}
+
+/* Transições suaves e comportamento global */
+* {
+  border-color: var(--border-color);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ============================================================================
+   CLASSES DE INTERFACE SEMÂNTICA (PLATAFORMA & ADMIN)
+   ============================================================================ */
+
+/* Botão Primário da Marca (#084D6E / #2B9ED8) */
+.btn-brand {
+  background-color: var(--brand-primary);
+  color: #FFFFFF;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.btn-brand:hover {
+  background-color: var(--brand-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.btn-brand:active {
+  transform: translateY(0);
+}
+
+/* Botão Secundário / Outline */
+.btn-brand-outline {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  font-weight: 600;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.btn-brand-outline:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+/* Botão Destaque Accent (Ciano / Amarelo) */
+.btn-accent {
+  background-color: var(--brand-accent);
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.btn-accent:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Superfícies e Cards */
+.surface-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.surface-subtle {
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+}
+
+/* Inputs Padronizados */
+.input-theme {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-theme:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px rgba(8, 77, 110, 0.2);
+}
+
+.input-theme::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+/* Badges Semânticos */
+.badge-theme {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.badge-brand {
+  background-color: rgba(8, 77, 110, 0.12);
+  color: var(--brand-primary);
+  border: 1px solid rgba(8, 77, 110, 0.25);
+}
+
+[data-theme="dark"] .badge-brand,
+.dark .badge-brand {
+  background-color: rgba(43, 158, 216, 0.2);
+  color: var(--brand-primary);
+  border: 1px solid rgba(43, 158, 216, 0.4);
+}
+
+.badge-success {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: var(--status-success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-warning {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: var(--status-warning);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-error {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: var(--status-error);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* ============================================================================
+   ESTILOS DE VITRINE (CLIENT STOREFRONTS)
+   Preserva classes legadas com compatibilidade para o tema Pop-Art do cliente
+   ============================================================================ */
+
+.btn-primary {
+  background-color: var(--brand-primary);
+  color: #FFFFFF;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--brand-primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: var(--brand-accent);
+  color: #FFFFFF;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-outline {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-outline:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--brand-primary);
+}
+
+.btn-whatsapp {
+  background-color: #25D366;
+  color: #FFFFFF;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.card-comic {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.card-comic-thick {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+}
+
+.badge-pop {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background-color: var(--bg-subtle);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+/* ============================================================================
+   UTILITÁRIOS DE ROLAGEM & CARROSSEL (OCULTA BARRA CINZA NATIVA DO WINDOWS)
+   ============================================================================ */
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important; /* IE e Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+
+/* Suavização de scroll horizontal */
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
