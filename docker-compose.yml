@@ -1,12 +1,9 @@
-version: '3.8'
-
 services:
   # ============================================================================
-  # 1. BANCO DE DADOS POSTGRESQL 16 (Porta 5433 no Host para evitar conflito)
+  # 1. BANCO DE DADOS POSTGRESQL 16
   # ============================================================================
   postgres:
     image: postgres:16-alpine
-    container_name: saas_postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -15,43 +12,41 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./schema.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-    ports:
-      - "5433:5432"
+    expose:
+      - "5432"
     networks:
       - saas_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-ecommerce_saas}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   # ============================================================================
-  # 2. REDIS (Porta 6380 no Host para evitar conflito)
+  # 2. REDIS
   # ============================================================================
   redis:
     image: redis:7-alpine
-    container_name: saas_redis
     restart: unless-stopped
     volumes:
       - redis_data:/data
-    ports:
-      - "6380:6379"
+    expose:
+      - "6379"
     networks:
       - saas_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   # ============================================================================
-  # 3. BACKEND API (Porta 8001 no Host)
+  # 3. BACKEND API (FastAPI - Porta interna 8000)
   # ============================================================================
   api:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: saas_api
     restart: unless-stopped
     depends_on:
       postgres:
@@ -66,53 +61,45 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-GTp1Y_2StR1idjKIEEShehpZXWbAKS3xlXSnom8lAoY=}
       - CNAME_TARGET=${CNAME_TARGET:-cname.seusistema.com.br}
       - MAIN_DOMAINS=${MAIN_DOMAINS:-seusistema.com.br,app.seusistema.com.br,localhost}
+      - PLATFORM_BASE_URL=${PLATFORM_BASE_URL:-https://seusistema.com.br}
+      - MELHORENVIO_CLIENT_ID=${MELHORENVIO_CLIENT_ID:-}
+      - MELHORENVIO_CLIENT_SECRET=${MELHORENVIO_CLIENT_SECRET:-}
+      - MELHORENVIO_REDIRECT_URI=${MELHORENVIO_REDIRECT_URI:-}
       - UPLOAD_DIR=/app/uploads
       - ENVIRONMENT=production
     volumes:
       - uploads_data:/app/uploads
-    ports:
-      - "8001:8000"
+    expose:
+      - "8000"
     networks:
       - saas_network
+      - dokploy-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # ============================================================================
-  # 4. FRONTEND (Porta 3001 no Host)
+  # 4. FRONTEND (Next.js - Porta interna 3000)
   # ============================================================================
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: saas_frontend
     restart: unless-stopped
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     environment:
       - NODE_ENV=production
+      - PORT=3000
       - BACKEND_INTERNAL_URL=http://api:8000
-    ports:
-      - "3001:3000"
+    expose:
+      - "3000"
     networks:
       - saas_network
-
-  # ============================================================================
-  # 5. REVERSE PROXY CADDY (Portas 8080 e 8443 no Host)
-  # ============================================================================
-  caddy:
-    image: caddy:2-alpine
-    container_name: saas_caddy
-    restart: unless-stopped
-    depends_on:
-      - api
-      - frontend
-    ports:
-      - "8080:80"
-      - "8443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - saas_network
+      - dokploy-network
 
 # ============================================================================
 # REDES & VOLUMES PERSISTENTES
@@ -120,10 +107,10 @@ services:
 networks:
   saas_network:
     driver: bridge
+  dokploy-network:
+    external: true
 
 volumes:
   postgres_data:
   redis_data:
   uploads_data:
-  caddy_data:
-  caddy_config:
