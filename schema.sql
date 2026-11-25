@@ -484,6 +484,7 @@ CREATE TABLE storefront_banners (
     highlight_2 VARCHAR(150),
     highlight_3 VARCHAR(150),
     banner_image_url TEXT NOT NULL,
+    config_json JSONB DEFAULT '{}'::jsonb,
     is_active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP

@@ -54,14 +54,24 @@ Este projeto está configurado para deploy direto no **Dokploy** usando **Docker
 
 ---
 
+## Sincronizar Banco Local, Produtos e Imagens antes do Deploy
+
+Antes de dar `git push`, rode o exportador local para gerar o snapshot completo do banco (`tenants`, `users`, `categories`, `products`, `product_variants`, `product_wholesale_tiers`, `storefront_banners`, `tenant_integrations`) e copiar todas as imagens de `backend/uploads/` para `backend/seed_data/`:
+
+```powershell
+python backend/export_local_to_seed.py
+```
+
+Na inicialização do container no Dokploy, o backend (`app/seed_sync.py`) importa automaticamente e de forma idempotente todos os registros faltantes para o PostgreSQL e restaura as imagens para `/app/uploads`.
+
+---
+
 ## Subir para o Git (executar em `C:\Antigravity\saas-ecommerce`)
 
 ```powershell
-git init
-git branch -M main
+python backend/export_local_to_seed.py
 git add .
 git status
-git commit -m "chore: prepara projeto para deploy no Dokploy via Git"
-git remote add origin https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git
-git push -u origin main
+git commit -m "chore: sincroniza banco, produtos e imagens para deploy no Dokploy"
+git push
 ```

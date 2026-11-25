@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.database import engine, Base, init_db_resilient
+from app.seed_sync import sync_seed_data
 from app.redis_client import get_redis, close_redis
 from app.middleware.tenant import TenantResolutionMiddleware
 from app.api.router import api_router
@@ -33,6 +34,9 @@ async def lifespan(app: FastAPI):
 
     # Cria tabelas com resiliência automática (Postgres ou SQLite local)
     await init_db_resilient()
+
+    # Sincroniza snapshot e imagens de seed_data/ se existirem (idempotente)
+    await sync_seed_data()
 
     yield
 
