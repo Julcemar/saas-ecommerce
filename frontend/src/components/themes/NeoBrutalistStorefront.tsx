@@ -5,6 +5,7 @@ import Link from "next/link";
 import { TenantInfo, ProductItem, fetchApi, NavigationItem } from "@/lib/api";
 import InteractiveHeroBanner, { BannerData } from "@/components/InteractiveHeroBanner";
 import CartDrawer from "@/components/CartDrawer";
+import CustomerAccountMenu from "@/components/CustomerAccountMenu";
 import {
   FiSearch,
   FiUser,
@@ -357,13 +358,7 @@ export default function NeoBrutalistStorefront({
 
           {/* Botões à Direita: Conta & Carrinho Comic */}
           <div className="flex items-center gap-3">
-            <Link
-              href="/admin/login"
-              className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-black border-2 border-black rounded-lg px-3 py-1.5 bg-white shadow-[2px_2px_0px_#111111] hover:bg-gray-50"
-            >
-              <FiUser className="w-3.5 h-3.5" />
-              <span>CONTA</span>
-            </Link>
+            <CustomerAccountMenu activeTheme="neo_brutalist" />
 
             <button
               type="button"

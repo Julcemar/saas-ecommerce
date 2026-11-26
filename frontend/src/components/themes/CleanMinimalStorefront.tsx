@@ -6,6 +6,7 @@ import { TenantInfo, ProductItem } from "@/lib/api";
 import { useStorefrontState } from "@/lib/useStorefrontState";
 import InteractiveHeroBanner from "@/components/InteractiveHeroBanner";
 import CartDrawer from "@/components/CartDrawer";
+import CustomerAccountMenu from "@/components/CustomerAccountMenu";
 import {
   StorefrontTopBar,
   StorefrontHero,
@@ -84,13 +85,7 @@ export default function CleanMinimalStorefront({
 
           {/* Ações: Conta & Carrinho Minimalista */}
           <div className="flex items-center gap-3">
-            <Link
-              href="/admin/login"
-              className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 px-3 py-1.5 rounded-full hover:bg-neutral-100 transition-colors"
-            >
-              <FiUser className="w-3.5 h-3.5" />
-              <span>Minha Conta</span>
-            </Link>
+            <CustomerAccountMenu activeTheme="clean_minimal" />
 
             <button
               type="button"

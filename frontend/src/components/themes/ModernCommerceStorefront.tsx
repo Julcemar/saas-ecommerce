@@ -6,6 +6,7 @@ import { TenantInfo, ProductItem } from "@/lib/api";
 import { useStorefrontState } from "@/lib/useStorefrontState";
 import InteractiveHeroBanner from "@/components/InteractiveHeroBanner";
 import CartDrawer from "@/components/CartDrawer";
+import CustomerAccountMenu from "@/components/CustomerAccountMenu";
 import {
   StorefrontTopBar,
   StorefrontHero,
@@ -110,13 +111,7 @@ export default function ModernCommerceStorefront({
 
           {/* Botões de Ação: Conta e Carrinho */}
           <div className="flex items-center gap-3">
-            <Link
-              href="/admin/login"
-              className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors"
-            >
-              <FiUser className="w-4 h-4" />
-              <span>Entrar</span>
-            </Link>
+            <CustomerAccountMenu activeTheme="modern_commerce" />
 
             <button
               type="button"

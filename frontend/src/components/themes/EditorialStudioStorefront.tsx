@@ -6,6 +6,7 @@ import { TenantInfo, ProductItem } from "@/lib/api";
 import { useStorefrontState } from "@/lib/useStorefrontState";
 import InteractiveHeroBanner from "@/components/InteractiveHeroBanner";
 import CartDrawer from "@/components/CartDrawer";
+import CustomerAccountMenu from "@/components/CustomerAccountMenu";
 import {
   StorefrontTopBar,
   StorefrontHero,
@@ -87,12 +88,7 @@ export default function EditorialStudioStorefront({
 
           {/* Ações da Loja */}
           <div className="flex items-center gap-4">
-            <Link
-              href="/admin/login"
-              className="hidden sm:inline-block text-xs font-medium tracking-wide text-neutral-600 hover:text-neutral-900 transition-colors uppercase"
-            >
-              Conta
-            </Link>
+            <CustomerAccountMenu activeTheme="editorial_studio" />
 
             <button
               type="button"
