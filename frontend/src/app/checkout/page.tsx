@@ -4,7 +4,14 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import StorefrontShell from "@/components/StorefrontShell";
-import { CartItem, TenantInfo, fetchApi } from "@/lib/api";
+import {
+  CartItem,
+  CustomerProfile,
+  TenantInfo,
+  fetchApi,
+  fetchCustomerApi,
+  getCustomerToken,
+} from "@/lib/api";
 import { getActiveTheme, getThemeClasses, StorefrontTheme } from "@/lib/themeTokens";
 import {
   FiCheckCircle,
@@ -73,13 +80,54 @@ export default function CheckoutPage() {
 
   // Parcelamento
   const [installments, setInstallments] = useState(1);
+  const [loggedCustomer, setLoggedCustomer] = useState<CustomerProfile | null>(null);
+
+  const calculateShippingForCep = async (cleanCep: string, itemsForShip: CartItem[]) => {
+    if (cleanCep.length !== 8 || itemsForShip.length === 0) return;
+    setLoadingShipping(true);
+    try {
+      const shippingPayload = {
+        dest_zip: cleanCep,
+        items: itemsForShip.map((ci) => ({
+          id: ci.product.id,
+          name: ci.product.name,
+          quantity: ci.quantity,
+          unit_price: Number(ci.unit_price),
+          weight_grams: ci.product.weight_grams || 350,
+          length_cm: ci.product.length_cm || 16,
+          width_cm: ci.product.width_cm || 12,
+          height_cm: ci.product.height_cm || 10,
+        })),
+      };
+
+      const shipRes = await fetchApi("/shipping/calculate", {
+        method: "POST",
+        body: JSON.stringify(shippingPayload),
+      });
+
+      if (shipRes.ok) {
+        const shipData = await shipRes.json();
+        const options = shipData.options || [];
+        setShippingOptions(options);
+        if (options.length > 0) {
+          setSelectedShipping(options[0]);
+        }
+      }
+    } catch (err) {
+      console.warn("Erro ao calcular frete:", err);
+    } finally {
+      setLoadingShipping(false);
+    }
+  };
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [tenantRes, gatewaysRes] = await Promise.all([
+        const hasCustomerToken = Boolean(getCustomerToken());
+        const [tenantRes, gatewaysRes, meRes] = await Promise.all([
           fetchApi("/tenant/me"),
           fetchApi("/payment/active-gateways"),
+          hasCustomerToken ? fetchCustomerApi("/storefront/me") : Promise.resolve(null),
         ]);
 
         if (tenantRes.ok) {
@@ -97,16 +145,47 @@ export default function CheckoutPage() {
           }
         }
 
+        let loadedCartItems: CartItem[] = [];
         const raw = localStorage.getItem("saas_cart");
         if (raw) {
           const items = JSON.parse(raw);
           if (items.length === 0) {
             router.push("/carrinho");
-          } else {
-            setCartItems(items);
+            return;
           }
+          loadedCartItems = items;
+          setCartItems(items);
         } else {
           router.push("/carrinho");
+          return;
+        }
+
+        if (meRes && meRes.ok) {
+          const meData: CustomerProfile = await meRes.json();
+          setLoggedCustomer(meData);
+          setPersonType((meData.person_type || "PF").toUpperCase() === "PJ" ? "PJ" : "PF");
+          setFullName(meData.full_name || "");
+          setCompanyName(meData.company_name || "");
+          setTaxId(meData.tax_id || "");
+          setEmail(meData.email || "");
+          setPhone(meData.phone || "");
+
+          if (meData.addresses && meData.addresses.length > 0) {
+            const defaultAddr =
+              meData.addresses.find((a) => a.is_default) || meData.addresses[0];
+            setCep(defaultAddr.postal_code || "");
+            setStreet(defaultAddr.street || "");
+            setNumber(defaultAddr.number || "");
+            setComplement(defaultAddr.complement || "");
+            setNeighborhood(defaultAddr.neighborhood || "");
+            setCity(defaultAddr.city || "");
+            setState(defaultAddr.state || "SP");
+
+            const cleanCep = (defaultAddr.postal_code || "").replace(/\D/g, "");
+            if (cleanCep.length === 8) {
+              calculateShippingForCep(cleanCep, loadedCartItems);
+            }
+          }
         }
       } catch (e) {
         console.error("Erro ao inicializar checkout:", e);
@@ -200,6 +279,7 @@ export default function CheckoutPage() {
         artwork_url: item.artwork_url || null,
       })),
       customer: {
+        person_type: personType,
         full_name: fullName,
         company_name: personType === "PJ" ? companyName : null,
         tax_id: taxId,
@@ -227,7 +307,7 @@ export default function CheckoutPage() {
     };
 
     try {
-      const res = await fetchApi("/orders", {
+      const res = await fetchCustomerApi("/orders", {
         method: "POST",
         body: JSON.stringify(payload),
       });
@@ -309,10 +389,24 @@ export default function CheckoutPage() {
             {/* Bloco 1: Identificação */}
             <div className={classes.card}>
               <div className={classes.cardHeader}>
-                <h3 className={`${classes.cardTitle} flex items-center gap-2`}>
-                  <FiUser className="w-4 h-4 text-[var(--color-primary)]" />
-                  <span>1. Identificação do Comprador</span>
-                </h3>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className={`${classes.cardTitle} flex items-center gap-2`}>
+                    <FiUser className="w-4 h-4 text-[var(--color-primary)]" />
+                    <span>1. Identificação do Comprador</span>
+                  </h3>
+                  {loggedCustomer ? (
+                    <span className={classes.badgeSuccess}>
+                      Conectado como {loggedCustomer.full_name.split(" ")[0]}
+                    </span>
+                  ) : (
+                    <Link
+                      href="/conta/login?redirect=/checkout"
+                      className="text-xs font-semibold text-[var(--color-primary)] hover:underline"
+                    >
+                      Já tem conta? Entrar
+                    </Link>
+                  )}
+                </div>
                 <p className={classes.cardSubtitle}>
                   Seus dados são necessários para a emissão da nota fiscal e contato sobre o pedido.
                 </p>

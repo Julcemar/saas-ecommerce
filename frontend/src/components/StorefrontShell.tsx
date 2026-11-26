@@ -6,6 +6,7 @@ import { TenantInfo, NavigationItem } from "@/lib/api";
 import { getActiveTheme, getThemeClasses, StorefrontTheme } from "@/lib/themeTokens";
 import { generateThemeCssVariables } from "@/lib/themeColors";
 import CartDrawer from "@/components/CartDrawer";
+import CustomerAccountMenu from "@/components/CustomerAccountMenu";
 import {
   FiSearch,
   FiUser,
@@ -315,13 +316,7 @@ export default function StorefrontShell({
               </div>
 
               <div className="flex items-center gap-3">
-                <Link
-                  href="/admin/login"
-                  className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 px-3 py-1.5 rounded-full hover:bg-neutral-100 transition-colors"
-                >
-                  <FiUser className="w-3.5 h-3.5" />
-                  <span>Minha Conta</span>
-                </Link>
+                <CustomerAccountMenu activeTheme="clean_minimal" />
 
                 <button
                   type="button"
@@ -385,13 +380,7 @@ export default function StorefrontShell({
               </div>
 
               <div className="flex items-center gap-4">
-                <Link
-                  href="/admin/login"
-                  className="hidden sm:flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-600 hover:text-neutral-900 px-3 py-1.5 transition-colors"
-                >
-                  <FiUser className="w-3.5 h-3.5" />
-                  <span>Conta</span>
-                </Link>
+                <CustomerAccountMenu activeTheme="editorial_studio" />
 
                 <button
                   type="button"
@@ -436,6 +425,8 @@ export default function StorefrontShell({
               </div>
 
               <div className="flex items-center gap-3">
+                <CustomerAccountMenu activeTheme="neo_brutalist" />
+
                 <button
                   type="button"
                   onClick={() => setIsCartOpen(true)}
@@ -496,13 +487,7 @@ export default function StorefrontShell({
               </div>
 
               <div className="flex items-center gap-3">
-                <Link
-                  href="/admin/login"
-                  className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 px-3 py-2 rounded-xl hover:bg-slate-100 transition-colors"
-                >
-                  <FiUser className="w-4 h-4" />
-                  <span>Entrar</span>
-                </Link>
+                <CustomerAccountMenu activeTheme="modern_commerce" />
 
                 <button
                   type="button"

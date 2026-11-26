@@ -11,6 +11,7 @@ from app.api.endpoints import (
     admin_metrics,
     uploads,
     storefront,
+    storefront_auth,
     integrations,
     shipping,
     payment_gateways,
@@ -30,6 +31,7 @@ api_router.include_router(customers.router)
 api_router.include_router(admin_metrics.router)
 api_router.include_router(uploads.router)
 api_router.include_router(storefront.router)
+api_router.include_router(storefront_auth.router)
 api_router.include_router(integrations.router)
 api_router.include_router(shipping.router)
 api_router.include_router(payment_gateways.router)

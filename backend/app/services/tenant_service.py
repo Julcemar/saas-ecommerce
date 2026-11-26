@@ -209,7 +209,9 @@ async def create_new_tenant(db: AsyncSession, req: OnboardingRequest) -> Dict[st
         "sub": str(user.id),
         "email": user.email,
         "role": user.role,
-        "tenant_id": str(tenant.id)
+        "token_type": "admin",
+        "tenant_id": str(tenant.id),
+        "tenant_slug": tenant.slug,
     })
 
     main_domain = settings.MAIN_DOMAINS[0]

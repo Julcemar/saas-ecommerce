@@ -99,6 +99,11 @@ async def _ensure_sqlite_columns(conn) -> None:
             ("birth_date", "DATE"),
             ("notes", "TEXT"),
             ("tags", "JSON NOT NULL DEFAULT '[]'"),
+            ("password_hash", "VARCHAR(255)"),
+            ("is_active", "BOOLEAN NOT NULL DEFAULT 1"),
+            ("last_login_at", "DATETIME"),
+            ("reset_token", "VARCHAR(255)"),
+            ("reset_token_expires_at", "DATETIME"),
         ],
         "customer_addresses": [
             ("label", "VARCHAR(100) DEFAULT 'Principal'"),
@@ -110,6 +115,16 @@ async def _ensure_sqlite_columns(conn) -> None:
         for col_name, col_def in cols:
             if col_name not in existing:
                 await conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_def}"))
+
+    # Garante unicidade composta por tenant_id no SQLite (quando email/tax_id informados)
+    await conn.execute(text(
+        "CREATE UNIQUE INDEX IF NOT EXISTS uq_customers_tenant_email_nonempty "
+        "ON customers (tenant_id, email) WHERE email IS NOT NULL AND email <> '';"
+    ))
+    await conn.execute(text(
+        "CREATE UNIQUE INDEX IF NOT EXISTS uq_customers_tenant_tax_id_nonempty "
+        "ON customers (tenant_id, tax_id) WHERE tax_id IS NOT NULL AND tax_id <> '';"
+    ))
 
 
 async def init_db_resilient():
@@ -158,6 +173,11 @@ async def init_db_resilient():
                     "ALTER TABLE customers ADD COLUMN IF NOT EXISTS birth_date DATE;",
                     "ALTER TABLE customers ADD COLUMN IF NOT EXISTS notes TEXT;",
                     "ALTER TABLE customers ADD COLUMN IF NOT EXISTS tags JSONB NOT NULL DEFAULT '[]'::jsonb;",
+                    "ALTER TABLE customers ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);",
+                    "ALTER TABLE customers ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;",
+                    "ALTER TABLE customers ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;",
+                    "ALTER TABLE customers ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255);",
+                    "ALTER TABLE customers ADD COLUMN IF NOT EXISTS reset_token_expires_at TIMESTAMPTZ;",
                     "ALTER TABLE customers ALTER COLUMN person_type DROP DEFAULT;",
                     "ALTER TABLE customers ALTER COLUMN person_type TYPE VARCHAR(20) USING person_type::text;",
                     "ALTER TABLE customers ALTER COLUMN person_type SET DEFAULT 'PF';",

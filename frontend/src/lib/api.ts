@@ -140,6 +140,138 @@ export interface NavigationItem {
 }
 
 export const API_BASE = "/api";
+export const CUSTOMER_TOKEN_KEY = "saas_customer_token";
+
+export interface CustomerAddressItem {
+  id: string;
+  tenant_id: string;
+  customer_id: string;
+  label?: string | null;
+  address_type: string;
+  postal_code: string;
+  street: string;
+  number: string;
+  complement?: string | null;
+  neighborhood: string;
+  city: string;
+  state: string;
+  country: string;
+  is_default: boolean;
+  created_at: string;
+}
+
+export interface CustomerProfile {
+  id: string;
+  tenant_id: string;
+  person_type: "PF" | "PJ" | string;
+  full_name: string;
+  company_name?: string | null;
+  tax_id?: string | null;
+  state_tax_id?: string | null;
+  email?: string | null;
+  phone: string;
+  birth_date?: string | null;
+  created_at: string;
+  addresses: CustomerAddressItem[];
+}
+
+export interface CustomerOrderItem {
+  id: string;
+  product_id?: string | null;
+  sku: string;
+  name: string;
+  variant_name?: string | null;
+  product_image_url?: string | null;
+  unit_price: number;
+  quantity: number;
+  subtotal: number;
+  custom_text?: string | null;
+  customization_notes?: string | null;
+  customization_answers?: Array<{
+    field_id?: string;
+    label: string;
+    field_type: string;
+    value: string;
+    additional_price?: number;
+  }>;
+  artwork_url?: string | null;
+  artwork_filename?: string | null;
+  artwork_status: string;
+  approved_art_url?: string | null;
+  art_approved: boolean;
+  production_notes?: string | null;
+}
+
+export interface CustomerOrder {
+  id: string;
+  tenant_id: string;
+  order_number: string;
+  status: string;
+  production_status: string;
+  due_date?: string | null;
+  priority: string;
+  items_subtotal: number;
+  discount_amount: number;
+  shipping_amount: number;
+  total_amount: number;
+  payment_method: string;
+  payment_status: string;
+  pix_qr_code_url?: string | null;
+  pix_copy_paste_code?: string | null;
+  installments: number;
+  shipping_provider?: string | null;
+  shipping_service_name?: string | null;
+  shipping_tracking_code?: string | null;
+  estimated_production_days: number;
+  customer_snapshot: Record<string, any>;
+  shipping_address_snapshot: Record<string, any>;
+  created_at: string;
+  items: CustomerOrderItem[];
+}
+
+export function getCustomerToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(CUSTOMER_TOKEN_KEY);
+}
+
+export function setCustomerToken(token: string) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(CUSTOMER_TOKEN_KEY, token);
+  window.dispatchEvent(new Event("customer-auth-updated"));
+}
+
+export function clearCustomerToken() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(CUSTOMER_TOKEN_KEY);
+  window.dispatchEvent(new Event("customer-auth-updated"));
+}
+
+export async function fetchCustomerApi(endpoint: string, options: RequestInit = {}) {
+  const token = getCustomerToken();
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
+
+  const headers: Record<string, string> = {
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  if (typeof window !== "undefined") {
+    const overrideTenant = localStorage.getItem("active_tenant_slug") || "jestein";
+    if (overrideTenant) {
+      headers["X-Tenant-Slug"] = overrideTenant;
+    }
+  }
+
+  return fetch(`${API_BASE}${endpoint}`, {
+    ...options,
+    credentials: "include",
+    headers,
+  });
+}
 
 export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const token = typeof window !== "undefined" ? localStorage.getItem("saas_token") : null;

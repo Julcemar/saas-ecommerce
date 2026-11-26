@@ -37,6 +37,7 @@ async def login(
         "sub": str(user.id),
         "email": user.email,
         "role": user.role,
+        "token_type": "admin",
         "tenant_id": str(user.tenant_id) if user.tenant_id else None,
         "tenant_slug": tenant_slug
     })

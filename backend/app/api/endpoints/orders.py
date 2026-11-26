@@ -23,7 +23,7 @@ from app.schemas.order import (
     OrderHistoryResponse,
 )
 from app.middleware.tenant import get_current_tenant
-from app.security.auth import require_auth
+from app.security.auth import require_auth, get_optional_customer
 from app.services.order_service import create_order_in_db
 
 router = APIRouter(prefix="/orders", tags=["Pedidos & Produção"])
@@ -55,12 +55,13 @@ async def _load_order_full(db: AsyncSession, order_id: Any, tenant_id: Any) -> O
 @router.post("", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 async def checkout_create_order(
     payload: OrderCreate,
+    authenticated_customer: Optional[Customer] = Depends(get_optional_customer),
     tenant_dict: Dict[str, Any] = Depends(get_current_tenant),
     db: AsyncSession = Depends(get_db),
 ):
     """Cria pedido via checkout da vitrine com cálculo estrito no backend."""
     tenant_id = tenant_dict["id"]
-    order = await create_order_in_db(db, tenant_id, payload)
+    order = await create_order_in_db(db, tenant_id, payload, authenticated_customer=authenticated_customer)
     full = await _load_order_full(db, order.id, tenant_id)
     return OrderResponse.model_validate(full)
 

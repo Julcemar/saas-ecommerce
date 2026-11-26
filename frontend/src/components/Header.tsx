@@ -5,6 +5,7 @@ import Link from "next/link";
 import { TenantInfo } from "@/lib/api";
 import ThemeToggle from "@/components/ThemeToggle";
 import CartDrawer from "@/components/CartDrawer";
+import CustomerAccountMenu from "@/components/CustomerAccountMenu";
 
 interface HeaderProps {
   tenant?: TenantInfo | null;
@@ -95,6 +96,7 @@ export default function Header({ tenant, cartCount = 0 }: HeaderProps) {
 
         {/* Ações */}
         <div className="flex items-center gap-3">
+          <CustomerAccountMenu activeTheme="modern_commerce" />
           <ThemeToggle />
           <button
             type="button"

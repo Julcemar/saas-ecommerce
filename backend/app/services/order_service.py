@@ -32,7 +32,8 @@ def calculate_tier_price(base_price: Decimal, tiers: List[Any], quantity: int) -
 async def create_order_in_db(
     db: AsyncSession,
     tenant_id: str,
-    order_data: OrderCreate
+    order_data: OrderCreate,
+    authenticated_customer: Customer = None,
 ) -> Order:
     # 1. Validação e cálculo dos itens com isolamento de tenant
     order_items_to_create = []
@@ -118,13 +119,15 @@ async def create_order_in_db(
             "artwork_status": "pending" if (first_uploaded_url or item_input.custom_text or clean_answers) else "approved"
         })
 
-    # 2. Busca ou cria cliente pelo tax_id dentro do tenant
-    customer_stmt = select(Customer).where(
-        Customer.tenant_id == tenant_id,
-        Customer.tax_id == order_data.customer.tax_id
-    )
-    cust_res = await db.execute(customer_stmt)
-    customer = cust_res.scalar_one_or_none()
+    # 2. Usa cliente autenticado (se logado na vitrine) ou busca/cria pelo tax_id/email dentro do tenant
+    customer = authenticated_customer
+    if not customer:
+        customer_stmt = select(Customer).where(
+            Customer.tenant_id == tenant_id,
+            Customer.tax_id == order_data.customer.tax_id
+        )
+        cust_res = await db.execute(customer_stmt)
+        customer = cust_res.scalar_one_or_none()
 
     if not customer:
         customer = Customer(
@@ -134,7 +137,7 @@ async def create_order_in_db(
             company_name=order_data.customer.company_name,
             tax_id=order_data.customer.tax_id,
             state_tax_id=order_data.customer.state_tax_id,
-            email=order_data.customer.email,
+            email=order_data.customer.email.strip().lower() if order_data.customer.email else None,
             phone=order_data.customer.phone
         )
         db.add(customer)
