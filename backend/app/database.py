@@ -64,12 +64,20 @@ async def init_db_resilient():
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
             if conn.dialect.name == "postgresql":
-                await conn.execute(
-                    text(
-                        "ALTER TABLE storefront_banners "
-                        "ADD COLUMN IF NOT EXISTS config_json JSONB DEFAULT '{}'::jsonb;"
-                    )
-                )
+                migrations = [
+                    "ALTER TABLE storefront_banners ADD COLUMN IF NOT EXISTS config_json JSONB DEFAULT '{}'::jsonb;",
+                    "ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;",
+                    "ALTER TABLE users DROP CONSTRAINT IF EXISTS chk_user_tenant_role;",
+                    "ALTER TABLE users ALTER COLUMN role DROP DEFAULT;",
+                    "ALTER TABLE users ALTER COLUMN role TYPE VARCHAR(50) USING role::text;",
+                    "ALTER TABLE users ALTER COLUMN role SET DEFAULT 'staff';",
+                    "ALTER TABLE users ADD CONSTRAINT chk_user_tenant_role CHECK ((role = 'super_admin' AND tenant_id IS NULL) OR (role IN ('tenant_owner', 'staff') AND tenant_id IS NOT NULL));",
+                    "ALTER TABLE products ALTER COLUMN product_type DROP DEFAULT;",
+                    "ALTER TABLE products ALTER COLUMN product_type TYPE VARCHAR(20) USING product_type::text;",
+                    "ALTER TABLE products ALTER COLUMN product_type SET DEFAULT 'simple';",
+                ]
+                for sql in migrations:
+                    await conn.execute(text(sql))
         logger.info(f"Banco de dados inicializado com sucesso ({engine.url.drivername}).")
     except Exception as e:
         logger.warning(f"Não foi possível conectar ao PostgreSQL ({e}).")

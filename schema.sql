@@ -205,6 +205,7 @@ CREATE TABLE products (
     base_price NUMERIC(12, 2) NOT NULL CHECK (base_price >= 0),
     compare_at_price NUMERIC(12, 2) CHECK (compare_at_price IS NULL OR compare_at_price >= base_price),
     cost_price NUMERIC(12, 2) CHECK (cost_price IS NULL OR cost_price >= 0),
+    image_url TEXT,
     
     -- Dimensões e cubagem física para cálculo de frete (Melhor Envio / Correios)
     weight_grams INT NOT NULL DEFAULT 300 CHECK (weight_grams > 0),
