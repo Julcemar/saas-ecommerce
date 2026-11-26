@@ -7,9 +7,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from fastapi import HTTPException, status
 from app.models.tenant import Tenant
-from app.models.product import Product, ProductWholesaleTier
+from app.models.product import Product, ProductWholesaleTier, ProductCustomizationField
 from app.models.customer import Customer
-from app.models.order import Order, OrderItem
+from app.models.order import Order, OrderItem, OrderHistory
 from app.schemas.order import OrderCreate
 
 
@@ -64,6 +64,38 @@ async def create_order_in_db(
         tiers = list(tier_res.scalars().all())
 
         unit_price = calculate_tier_price(Decimal(str(product.base_price)), tiers, item_input.quantity)
+
+        # Valida e soma acréscimos de campos dinâmicos de personalização no backend
+        cf_res = await db.execute(
+            select(ProductCustomizationField).where(
+                ProductCustomizationField.product_id == product.id,
+                ProductCustomizationField.tenant_id == tenant_id,
+            )
+        )
+        cf_map = {str(cf.id): cf for cf in cf_res.scalars().all()}
+        extra_unit = Decimal("0.00")
+        clean_answers = []
+        first_uploaded_url = item_input.artwork_url
+
+        for ans in (item_input.customization_answers or []):
+            fid = str(ans.get("field_id") or "")
+            val = ans.get("value")
+            cf_obj = cf_map.get(fid)
+            if val is not None and str(val).strip() != "":
+                add_p = Decimal(str(cf_obj.additional_price)) if cf_obj else Decimal("0.00")
+                extra_unit += add_p
+                clean_answers.append({
+                    "field_id": fid,
+                    "label": cf_obj.label if cf_obj else (ans.get("label") or "Campo"),
+                    "field_type": cf_obj.field_type if cf_obj else (ans.get("field_type") or "TEXT"),
+                    "value": str(val).strip(),
+                    "additional_price": float(add_p),
+                })
+                if (cf_obj and cf_obj.field_type == "FILE_UPLOAD") or ans.get("field_type") == "FILE_UPLOAD":
+                    if not first_uploaded_url:
+                        first_uploaded_url = str(val).strip()
+
+        unit_price = unit_price + extra_unit
         subtotal = unit_price * Decimal(item_input.quantity)
         items_subtotal += subtotal
 
@@ -74,13 +106,16 @@ async def create_order_in_db(
             "product_id": product.id,
             "sku": product.sku,
             "name": product.name,
+            "product_image_url": product.image_url,
             "unit_price": unit_price,
             "quantity": item_input.quantity,
             "subtotal": subtotal,
             "custom_text": item_input.custom_text,
-            "artwork_url": item_input.artwork_url,
+            "customization_notes": item_input.customization_notes,
+            "customization_answers": clean_answers,
+            "artwork_url": first_uploaded_url,
             "artwork_filename": item_input.artwork_filename,
-            "artwork_status": "pending" if (item_input.artwork_url or item_input.custom_text) else "approved"
+            "artwork_status": "pending" if (first_uploaded_url or item_input.custom_text or clean_answers) else "approved"
         })
 
     # 2. Busca ou cria cliente pelo tax_id dentro do tenant

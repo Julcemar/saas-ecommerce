@@ -78,6 +78,12 @@ class Product(Base):
         cascade="all, delete-orphan",
         order_by="ProductWholesaleTier.min_quantity"
     )
+    customization_fields = relationship(
+        "ProductCustomizationField",
+        back_populates="product",
+        cascade="all, delete-orphan",
+        order_by="ProductCustomizationField.position"
+    )
 
 
 class ProductVariant(Base):
@@ -116,3 +122,23 @@ class ProductWholesaleTier(Base):
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     product = relationship("Product", back_populates="wholesale_tiers")
+
+
+class ProductCustomizationField(Base):
+    __tablename__ = "product_customization_fields"
+
+    id = Column(GUID, primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(GUID, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    product_id = Column(GUID, ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
+    label = Column(String(255), nullable=False)
+    field_type = Column(String(30), nullable=False, default="TEXT")  # TEXT, TEXTAREA, SELECT, COLOR_SWATCH, FILE_UPLOAD
+    placeholder = Column(String(255), nullable=True)
+    options = Column(JSON_TYPE, nullable=False, default=list)
+    max_length = Column(Integer, nullable=True)
+    additional_price = Column(Numeric(12, 2), nullable=False, default=0.00)
+    is_required = Column(Boolean, nullable=False, default=False)
+    position = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    product = relationship("Product", back_populates="customization_fields")

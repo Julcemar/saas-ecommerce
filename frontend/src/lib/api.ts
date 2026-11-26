@@ -37,6 +37,18 @@ export interface ProductVariantItem {
   is_active: boolean;
 }
 
+export interface CustomizationFieldItem {
+  id?: string;
+  label: string;
+  field_type: "TEXT" | "TEXTAREA" | "SELECT" | "COLOR_SWATCH" | "FILE_UPLOAD";
+  placeholder?: string | null;
+  options: string[];
+  max_length?: number | null;
+  additional_price: number;
+  is_required: boolean;
+  position: number;
+}
+
 export interface CategoryItem {
   id: string;
   tenant_id: string;
@@ -90,6 +102,7 @@ export interface ProductItem {
   seo_description?: string | null;
   wholesale_tiers: WholesaleTier[];
   variants?: ProductVariantItem[];
+  customization_fields?: CustomizationFieldItem[];
 }
 
 export interface CartItem {
@@ -97,6 +110,13 @@ export interface CartItem {
   quantity: number;
   unit_price: number;
   custom_text?: string;
+  customization_answers?: Array<{
+    field_id: string;
+    label: string;
+    field_type: string;
+    value: string;
+    additional_price: number;
+  }>;
   artwork_url?: string;
   artwork_filename?: string;
 }

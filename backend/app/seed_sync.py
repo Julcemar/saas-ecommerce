@@ -15,9 +15,10 @@ from app.database import AsyncSessionLocal
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.models.category import Category
-from app.models.product import Product, ProductVariant, ProductWholesaleTier
+from app.models.product import Product, ProductVariant, ProductWholesaleTier, ProductCustomizationField
 from app.models.storefront import StorefrontBanner
 from app.models.integration import TenantIntegration
+from app.models.customer import Customer, CustomerAddress
 from app.models.order import Order, OrderItem, OrderHistory
 
 logger = logging.getLogger("saas-backend")
@@ -433,6 +434,8 @@ async def sync_seed_data() -> None:
             logger.info("[SeedSync] Banco já sincronizado (nenhum registro novo pendente).")
 
         await _seed_jestein_sample_orders(db)
+        await _seed_jestein_customers(db)
+        await _seed_jestein_customization_fields(db)
 
 
 async def _seed_jestein_sample_orders(db: AsyncSession) -> None:
@@ -582,3 +585,188 @@ async def _seed_jestein_sample_orders(db: AsyncSession) -> None:
     except Exception as e:
         await db.rollback()
         logger.warning(f"[SeedSync] Aviso ao criar pedidos de exemplo: {e}")
+
+
+async def _seed_jestein_customers(db: AsyncSession) -> None:
+    """Popula 6 clientes (PF e PJ) para Jestein Personalizados e vincula aos pedidos existentes."""
+    try:
+        j_res = await db.execute(select(Tenant).where(Tenant.slug == "jestein"))
+        jestein = j_res.scalar_one_or_none()
+        if not jestein:
+            return
+
+        cnt_res = await db.execute(
+            select(func.count(Customer.id)).where(Customer.tenant_id == jestein.id)
+        )
+        if (cnt_res.scalar() or 0) == 0:
+            seed_customers = [
+                {
+                    "person_type": "PJ",
+                    "full_name": "Mariana Costa (TechBR)",
+                    "company_name": "TechBR Soluções Corporativas Ltda",
+                    "tax_id": "12.345.678/0001-90",
+                    "email": "mariana@techbr.com.br",
+                    "phone": "(41) 99811-2233",
+                    "notes": "Cliente corporativo — usa fonte Montserrat e logo padrão centralizado.",
+                    "tags": ["VIP", "Corporativo"],
+                    "addr": {"label": "Sede Batel", "postal_code": "80420-090", "street": "Av. Batel", "number": "1450", "neighborhood": "Batel", "city": "Curitiba", "state": "PR"},
+                },
+                {
+                    "person_type": "PF",
+                    "full_name": "Lucas Andrade",
+                    "company_name": None,
+                    "tax_id": "345.678.901-22",
+                    "email": "lucas.andrade@gmail.com",
+                    "phone": "(11) 99455-8877",
+                    "notes": "Prefere gravação a laser discreta na lateral direita.",
+                    "tags": ["CrossFit"],
+                    "addr": {"label": "Academia Alpha", "postal_code": "01304-001", "street": "Rua Augusta", "number": "910", "neighborhood": "Consolação", "city": "São Paulo", "state": "SP"},
+                },
+                {
+                    "person_type": "PJ",
+                    "full_name": "Clínica Sorriso Pleno",
+                    "company_name": "Clínica Odontológica Sorriso Pleno S/S",
+                    "tax_id": "23.456.789/0001-10",
+                    "email": "compras@sorrisopleno.com.br",
+                    "phone": "(41) 99123-4567",
+                    "notes": "Pedidos recorrentes de canecas térmicas para novos pacientes.",
+                    "tags": ["Corporativo", "Recorrente"],
+                    "addr": {"label": "Consultório", "postal_code": "80020-310", "street": "Rua XV de Novembro", "number": "320", "neighborhood": "Centro", "city": "Curitiba", "state": "PR"},
+                },
+                {
+                    "person_type": "PF",
+                    "full_name": "Fernanda Lima",
+                    "company_name": None,
+                    "tax_id": "556.778.899-00",
+                    "email": "fernanda.lima@uol.com.br",
+                    "phone": "(47) 99600-1122",
+                    "notes": "Embalagem para presente com laço.",
+                    "tags": ["Eventos"],
+                    "addr": {"label": "Casa", "postal_code": "88330-040", "street": "Av. Brasil", "number": "2200", "neighborhood": "Centro", "city": "Balneário Camboriú", "state": "SC"},
+                },
+                {
+                    "person_type": "PF",
+                    "full_name": "Rafael Mendes",
+                    "company_name": None,
+                    "tax_id": "998.877.665-11",
+                    "email": "rafael@mendesarch.com",
+                    "phone": "(21) 98877-6655",
+                    "notes": "Arquitetura e eventos — entrega em horário comercial.",
+                    "tags": ["Corporativo"],
+                    "addr": {"label": "Escritório Ipanema", "postal_code": "22410-002", "street": "Rua Visconde de Pirajá", "number": "414", "neighborhood": "Ipanema", "city": "Rio de Janeiro", "state": "RJ"},
+                },
+                {
+                    "person_type": "PJ",
+                    "full_name": "Escola Futuro Brilhante",
+                    "company_name": "Instituto Educacional Futuro Brilhante Ltda",
+                    "tax_id": "45.678.912/0001-55",
+                    "email": "direcao@futurobrilhante.edu.br",
+                    "phone": "(41) 99988-7766",
+                    "notes": "Kits de formatura anuais com caixinhas individuais.",
+                    "tags": ["VIP", "Educação"],
+                    "addr": {"label": "Unidade Água Verde", "postal_code": "80250-210", "street": "Av. Sete de Setembro", "number": "4100", "neighborhood": "Água Verde", "city": "Curitiba", "state": "PR"},
+                },
+            ]
+
+            for sc in seed_customers:
+                cust = Customer(
+                    tenant_id=jestein.id,
+                    person_type=sc["person_type"],
+                    full_name=sc["full_name"],
+                    company_name=sc["company_name"],
+                    tax_id=sc["tax_id"],
+                    email=sc["email"],
+                    phone=sc["phone"],
+                    notes=sc["notes"],
+                    tags=sc["tags"],
+                )
+                db.add(cust)
+                await db.flush()
+                db.add(CustomerAddress(
+                    tenant_id=jestein.id,
+                    customer_id=cust.id,
+                    is_default=True,
+                    **sc["addr"],
+                ))
+            await db.commit()
+
+        # Vincula pedidos existentes da Jestein que ainda estão sem customer_id
+        custs = (
+            await db.execute(select(Customer).where(Customer.tenant_id == jestein.id))
+        ).scalars().all()
+        by_email = {c.email: c.id for c in custs if c.email}
+        orders = (
+            await db.execute(
+                select(Order).where(Order.tenant_id == jestein.id, Order.customer_id.is_(None))
+            )
+        ).scalars().all()
+        linked = 0
+        for o in orders:
+            snap_email = (o.customer_snapshot or {}).get("email")
+            if snap_email and snap_email in by_email:
+                o.customer_id = by_email[snap_email]
+                linked += 1
+        if linked:
+            await db.commit()
+    except Exception as e:
+        await db.rollback()
+        logger.warning(f"[SeedSync] Aviso ao criar clientes de exemplo: {e}")
+
+
+async def _seed_jestein_customization_fields(db: AsyncSession) -> None:
+    """Popula campos de personalização dinâmicos em 3 produtos da Jestein caso ainda não existam."""
+    try:
+        j_res = await db.execute(select(Tenant).where(Tenant.slug == "jestein"))
+        jestein = j_res.scalar_one_or_none()
+        if not jestein:
+            return
+
+        cnt_res = await db.execute(
+            select(func.count(ProductCustomizationField.id)).where(
+                ProductCustomizationField.tenant_id == jestein.id
+            )
+        )
+        if (cnt_res.scalar() or 0) > 0:
+            return
+
+        prods = (
+            await db.execute(
+                select(Product)
+                .where(Product.tenant_id == jestein.id)
+                .order_by(Product.is_featured.desc(), Product.created_at.asc())
+                .limit(3)
+            )
+        ).scalars().all()
+
+        templates = [
+            [
+                {"label": "Nome ou Frase para Estampar", "field_type": "TEXT", "placeholder": "Ex: Equipe TechBR 2026", "options": [], "max_length": 40, "additional_price": Decimal("0.00"), "is_required": False},
+                {"label": "Cor de Destaque / Acabamento", "field_type": "COLOR_SWATCH", "placeholder": None, "options": ["Azul Royal", "Preto Fosco", "Dourado", "Branco"], "max_length": None, "additional_price": Decimal("0.00"), "is_required": False},
+                {"label": "Envie seu Logotipo ou Foto", "field_type": "FILE_UPLOAD", "placeholder": None, "options": [], "max_length": None, "additional_price": Decimal("0.00"), "is_required": False},
+            ],
+            [
+                {"label": "Texto para Gravação a Laser", "field_type": "TEXT", "placeholder": "Ex: Dra. Camila Silva", "options": [], "max_length": 35, "additional_price": Decimal("0.00"), "is_required": False},
+                {"label": "Estilo da Fonte", "field_type": "SELECT", "placeholder": None, "options": ["Montserrat Moderna", "Serifada Clássica", "Manuscrita"], "max_length": None, "additional_price": Decimal("0.00"), "is_required": False},
+                {"label": "Caixa de Presente Premium (+R$ 8,00)", "field_type": "SELECT", "placeholder": None, "options": ["Sim - Embalagem Premium"], "max_length": None, "additional_price": Decimal("8.00"), "is_required": False},
+            ],
+            [
+                {"label": "Observações da Arte", "field_type": "TEXTAREA", "placeholder": "Descreva posição do logo e detalhes...", "options": [], "max_length": 150, "additional_price": Decimal("0.00"), "is_required": False},
+                {"label": "Envie sua Arte (PNG, SVG ou PDF)", "field_type": "FILE_UPLOAD", "placeholder": None, "options": [], "max_length": None, "additional_price": Decimal("0.00"), "is_required": False},
+            ],
+        ]
+
+        for p_idx, prod in enumerate(prods):
+            tpl = templates[p_idx % len(templates)]
+            for pos, f in enumerate(tpl):
+                db.add(ProductCustomizationField(
+                    tenant_id=jestein.id,
+                    product_id=prod.id,
+                    position=pos,
+                    **f,
+                ))
+
+        await db.commit()
+        logger.info(f"[SeedSync] Campos de personalização criados em {len(prods)} produtos da Jestein.")
+    except Exception as e:
+        await db.rollback()
+        logger.warning(f"[SeedSync] Aviso ao criar campos de personalização: {e}")

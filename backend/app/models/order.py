@@ -88,6 +88,7 @@ class OrderItem(Base):
     # Customização & Arte
     custom_text = Column(String(255), nullable=True)
     customization_notes = Column(Text, nullable=True)
+    customization_answers = Column(JSON_TYPE, nullable=False, default=list)
     artwork_url = Column(Text, nullable=True)
     artwork_filename = Column(String(255), nullable=True)
     artwork_status = Column(String(50), nullable=False, default="pending")  # 'pending', 'approved', 'rejected'

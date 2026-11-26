@@ -7,6 +7,7 @@ from app.api.endpoints import (
     categories,
     products,
     orders,
+    customers,
     admin_metrics,
     uploads,
     storefront,
@@ -25,6 +26,7 @@ api_router.include_router(tenant.router)
 api_router.include_router(categories.router)
 api_router.include_router(products.router)
 api_router.include_router(orders.router)
+api_router.include_router(customers.router)
 api_router.include_router(admin_metrics.router)
 api_router.include_router(uploads.router)
 api_router.include_router(storefront.router)

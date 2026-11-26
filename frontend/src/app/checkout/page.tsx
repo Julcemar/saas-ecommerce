@@ -196,6 +196,7 @@ export default function CheckoutPage() {
         quantity: item.quantity,
         unit_price: Number(item.unit_price),
         custom_text: item.custom_text || null,
+        customization_answers: item.customization_answers || [],
         artwork_url: item.artwork_url || null,
       })),
       customer: {

@@ -8,10 +8,13 @@ import {
   CategoryItem,
   ProductItem,
   ProductVariantItem,
+  CustomizationFieldItem,
   TenantInfo,
 } from "@/lib/api";
 import {
   FiArrowLeft,
+  FiArrowUp,
+  FiArrowDown,
   FiSave,
   FiPlus,
   FiTrash2,
@@ -98,6 +101,8 @@ export default function ProductForm({ mode, productId }: ProductFormProps) {
   const [textMaxLen, setTextMaxLen] = useState(40);
   const [enableArtwork, setEnableArtwork] = useState(false);
   const [tiers, setTiers] = useState<Array<{ min_quantity: number; unit_price: string }>>([]);
+  const [enableCustomFields, setEnableCustomFields] = useState(false);
+  const [customFields, setCustomFields] = useState<CustomizationFieldItem[]>([]);
 
   // SEO (recolhível)
   const [showSeo, setShowSeo] = useState(false);
@@ -196,6 +201,18 @@ export default function ProductForm({ mode, productId }: ProductFormProps) {
         setTextLabel(p.text_customization_label || "Nome ou Frase para Personalizar");
         setTextMaxLen(p.text_max_length || 40);
         setEnableArtwork(Boolean(p.enable_artwork_upload));
+        if (p.customization_fields && p.customization_fields.length > 0) {
+          setEnableCustomFields(true);
+          setCustomFields(
+            p.customization_fields.map((cf, idx) => ({
+              ...cf,
+              options: Array.isArray(cf.options) ? cf.options : [],
+              additional_price: Number(cf.additional_price || 0),
+              position: cf.position ?? idx,
+            }))
+          );
+          setShowCustomization(true);
+        }
         setTiers(
           (p.wholesale_tiers || []).map((t) => ({
             min_quantity: t.min_quantity,
@@ -439,6 +456,20 @@ export default function ProductForm({ mode, productId }: ProductFormProps) {
               image_url: v.image_url || null,
               is_active: v.is_active ?? true,
             }))
+          : [],
+        customization_fields: enableCustomFields
+          ? customFields
+              .filter((cf) => cf.label.trim())
+              .map((cf, idx) => ({
+                label: cf.label.trim(),
+                field_type: cf.field_type,
+                placeholder: cf.placeholder || null,
+                options: Array.isArray(cf.options) ? cf.options : [],
+                max_length: cf.max_length ? Number(cf.max_length) : null,
+                additional_price: Number(cf.additional_price || 0),
+                is_required: Boolean(cf.is_required),
+                position: idx,
+              }))
           : [],
       };
 
@@ -1051,6 +1082,260 @@ export default function ProductForm({ mode, productId }: ProductFormProps) {
 
             {showCustomization && (
               <div className="px-6 pb-6 pt-3 border-t border-border-theme space-y-5">
+                {/* Construtor de Campos Dinâmicos de Personalização */}
+                <div className="p-4 rounded-xl bg-bg-subtle/50 border border-border-theme space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-content-primary block">
+                        Este produto permite personalização pelo cliente
+                      </span>
+                      <span className="text-[11px] text-content-secondary">
+                        Crie campos de texto, seleção, cores ou upload de logo exibidos na vitrine.
+                      </span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={enableCustomFields}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setEnableCustomFields(checked);
+                        if (checked && customFields.length === 0) {
+                          setCustomFields([
+                            {
+                              label: "Nome ou Frase para Personalizar",
+                              field_type: "TEXT",
+                              placeholder: "Digite aqui...",
+                              options: [],
+                              max_length: 40,
+                              additional_price: 0,
+                              is_required: false,
+                              position: 0,
+                            },
+                          ]);
+                        }
+                      }}
+                      className="w-4 h-4 accent-[#084D6E] cursor-pointer"
+                    />
+                  </div>
+
+                  {enableCustomFields && (
+                    <div className="space-y-3 pt-2 border-t border-border-theme">
+                      {customFields.map((cf, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3.5 rounded-lg bg-bg-surface border border-border-theme space-y-3"
+                        >
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+                            <div className="sm:col-span-5">
+                              <label className="block text-[10px] font-semibold text-content-secondary mb-1">
+                                Rótulo do Campo *
+                              </label>
+                              <input
+                                type="text"
+                                value={cf.label}
+                                onChange={(e) =>
+                                  setCustomFields((prev) =>
+                                    prev.map((item, i) =>
+                                      i === idx ? { ...item, label: e.target.value } : item
+                                    )
+                                  )
+                                }
+                                placeholder="Ex: Nome para gravar"
+                                className="input-theme w-full"
+                              />
+                            </div>
+                            <div className="sm:col-span-3">
+                              <label className="block text-[10px] font-semibold text-content-secondary mb-1">
+                                Tipo
+                              </label>
+                              <select
+                                value={cf.field_type}
+                                onChange={(e) =>
+                                  setCustomFields((prev) =>
+                                    prev.map((item, i) =>
+                                      i === idx
+                                        ? { ...item, field_type: e.target.value as any }
+                                        : item
+                                    )
+                                  )
+                                }
+                                className="input-theme w-full"
+                              >
+                                <option value="TEXT">Texto Curto</option>
+                                <option value="TEXTAREA">Texto Longo</option>
+                                <option value="SELECT">Lista de Seleção</option>
+                                <option value="COLOR_SWATCH">Cores (Swatch)</option>
+                                <option value="FILE_UPLOAD">Upload de Arte/Logo</option>
+                              </select>
+                            </div>
+                            <div className="sm:col-span-2">
+                              <label className="block text-[10px] font-semibold text-content-secondary mb-1">
+                                Acréscimo (R$)
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={cf.additional_price}
+                                onChange={(e) =>
+                                  setCustomFields((prev) =>
+                                    prev.map((item, i) =>
+                                      i === idx
+                                        ? { ...item, additional_price: parseFloat(e.target.value) || 0 }
+                                        : item
+                                    )
+                                  )
+                                }
+                                className="input-theme w-full"
+                              />
+                            </div>
+                            <div className="sm:col-span-2 flex items-center justify-end gap-1">
+                              <button
+                                type="button"
+                                disabled={idx === 0}
+                                onClick={() => {
+                                  const copy = [...customFields];
+                                  [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
+                                  setCustomFields(copy);
+                                }}
+                                className="p-1.5 rounded border border-border-theme disabled:opacity-30"
+                                title="Mover para cima"
+                              >
+                                <FiArrowUp className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={idx === customFields.length - 1}
+                                onClick={() => {
+                                  const copy = [...customFields];
+                                  [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
+                                  setCustomFields(copy);
+                                }}
+                                className="p-1.5 rounded border border-border-theme disabled:opacity-30"
+                                title="Mover para baixo"
+                              >
+                                <FiArrowDown className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setCustomFields((prev) => prev.filter((_, i) => i !== idx))
+                                }
+                                className="p-1.5 rounded text-status-error hover:bg-red-500/10"
+                                title="Remover campo"
+                              >
+                                <FiTrash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-center">
+                            {(cf.field_type === "TEXT" || cf.field_type === "TEXTAREA") && (
+                              <>
+                                <input
+                                  type="text"
+                                  value={cf.placeholder || ""}
+                                  onChange={(e) =>
+                                    setCustomFields((prev) =>
+                                      prev.map((item, i) =>
+                                        i === idx ? { ...item, placeholder: e.target.value } : item
+                                      )
+                                    )
+                                  }
+                                  placeholder="Placeholder (ex: Digite o nome...)"
+                                  className="input-theme w-full"
+                                />
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={cf.max_length ?? ""}
+                                  onChange={(e) =>
+                                    setCustomFields((prev) =>
+                                      prev.map((item, i) =>
+                                        i === idx
+                                          ? {
+                                              ...item,
+                                              max_length: e.target.value ? Number(e.target.value) : null,
+                                            }
+                                          : item
+                                      )
+                                    )
+                                  }
+                                  placeholder="Máx. caracteres (ex: 40)"
+                                  className="input-theme w-full"
+                                />
+                              </>
+                            )}
+                            {(cf.field_type === "SELECT" || cf.field_type === "COLOR_SWATCH") && (
+                              <div className="sm:col-span-2">
+                                <input
+                                  type="text"
+                                  value={(cf.options || []).join(", ")}
+                                  onChange={(e) =>
+                                    setCustomFields((prev) =>
+                                      prev.map((item, i) =>
+                                        i === idx
+                                          ? {
+                                              ...item,
+                                              options: e.target.value
+                                                .split(",")
+                                                .map((s) => s.trim())
+                                                .filter(Boolean),
+                                            }
+                                          : item
+                                      )
+                                    )
+                                  }
+                                  placeholder="Opções separadas por vírgula (ex: Azul, Preto, Dourado)"
+                                  className="input-theme w-full"
+                                />
+                              </div>
+                            )}
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={cf.is_required}
+                                onChange={(e) =>
+                                  setCustomFields((prev) =>
+                                    prev.map((item, i) =>
+                                      i === idx ? { ...item, is_required: e.target.checked } : item
+                                    )
+                                  )
+                                }
+                                className="w-4 h-4 accent-[#084D6E]"
+                              />
+                              <span className="text-[11px] font-medium">Campo obrigatório</span>
+                            </label>
+                          </div>
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCustomFields((prev) => [
+                            ...prev,
+                            {
+                              label: "",
+                              field_type: "TEXT",
+                              placeholder: "",
+                              options: [],
+                              max_length: 40,
+                              additional_price: 0,
+                              is_required: false,
+                              position: prev.length,
+                            },
+                          ])
+                        }
+                        className="btn-outline text-[11px] py-1.5 px-3 flex items-center gap-1"
+                      >
+                        <FiPlus className="w-3.5 h-3.5" />
+                        <span>Adicionar Campo de Personalização</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <label className="flex items-center gap-2.5 p-3 rounded-lg bg-bg-subtle/50 border border-border-theme cursor-pointer">
                     <input

@@ -17,6 +17,7 @@ import {
   FiLogOut,
   FiCheckCircle,
   FiLayers,
+  FiUsers,
 } from "react-icons/fi";
 
 export default function AdminLayout({
@@ -112,6 +113,7 @@ export default function AdminLayout({
     { label: "Produtos", href: "/admin/produtos", icon: FiBox },
     { label: "Categorias", href: "/admin/categorias", icon: FiFolder },
     { label: "Pedidos & Produção", href: "/admin/pedidos", icon: FiShoppingCart },
+    { label: "Clientes", href: "/admin/clientes", icon: FiUsers },
     { label: "Temas & Aparência", href: "/admin/aparencia", icon: FiSliders },
     { label: "Integrações & Módulos", href: "/admin/integracoes", icon: FiCpu },
     { label: "Domínio Próprio (SSL)", href: "/admin/dominio", icon: FiGlobe },

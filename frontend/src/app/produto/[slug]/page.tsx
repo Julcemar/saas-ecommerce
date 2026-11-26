@@ -6,6 +6,7 @@ import Link from "next/link";
 import StorefrontShell from "@/components/StorefrontShell";
 import WholesaleTable from "@/components/WholesaleTable";
 import CustomizationBox from "@/components/CustomizationBox";
+import DynamicCustomizationFields from "@/components/DynamicCustomizationFields";
 import { ProductItem, TenantInfo, fetchApi } from "@/lib/api";
 import { getActiveTheme, getThemeClasses, StorefrontTheme } from "@/lib/themeTokens";
 import {
@@ -36,6 +37,7 @@ export default function SingleProductPage() {
   const [customText, setCustomText] = useState("");
   const [artworkUrl, setArtworkUrl] = useState<string | undefined>(undefined);
   const [artworkFilename, setArtworkFilename] = useState<string | undefined>(undefined);
+  const [dynamicValues, setDynamicValues] = useState<Record<string, string>>({});
 
   // Simulação de frete
   const [cep, setCep] = useState("");
@@ -115,9 +117,44 @@ export default function SingleProductPage() {
     }
   }
 
+  const extraCustomPrice = (product.customization_fields || []).reduce((acc, cf, idx) => {
+    const key = cf.id || String(idx);
+    const val = dynamicValues[key];
+    if (val && val.trim() !== "") {
+      return acc + Number(cf.additional_price || 0);
+    }
+    return acc;
+  }, 0);
+
+  unitPrice = unitPrice + extraCustomPrice;
   const totalPrice = unitPrice * quantity;
 
   const handleAddToCart = () => {
+    const customFieldsList = product.customization_fields || [];
+    for (let i = 0; i < customFieldsList.length; i++) {
+      const cf = customFieldsList[i];
+      const key = cf.id || String(i);
+      if (cf.is_required && !(dynamicValues[key] || "").trim()) {
+        alert(`Por favor, preencha o campo obrigatório: ${cf.label}`);
+        return;
+      }
+    }
+
+    const customizationAnswers = customFieldsList
+      .map((cf, idx) => {
+        const key = cf.id || String(idx);
+        const val = (dynamicValues[key] || "").trim();
+        if (!val) return null;
+        return {
+          field_id: cf.id || key,
+          label: cf.label,
+          field_type: cf.field_type,
+          value: val,
+          additional_price: Number(cf.additional_price || 0),
+        };
+      })
+      .filter(Boolean);
+
     try {
       const existing = localStorage.getItem("saas_cart");
       const cart = existing ? JSON.parse(existing) : [];
@@ -127,6 +164,7 @@ export default function SingleProductPage() {
         quantity,
         unit_price: unitPrice,
         custom_text: customText || undefined,
+        customization_answers: customizationAnswers,
         artwork_url: artworkUrl,
         artwork_filename: artworkFilename,
       };
@@ -291,8 +329,16 @@ export default function SingleProductPage() {
               </div>
             )}
 
-            {/* Módulo de Personalização (Texto / Upload de Arte) */}
-            {(product.enable_text_customization || product.enable_artwork_upload) && (
+            {/* Campos Dinâmicos de Personalização (se configurados no produto) */}
+            {product.customization_fields && product.customization_fields.length > 0 ? (
+              <div className={classes.card}>
+                <DynamicCustomizationFields
+                  fields={product.customization_fields}
+                  values={dynamicValues}
+                  onChange={(k, v) => setDynamicValues((prev) => ({ ...prev, [k]: v }))}
+                />
+              </div>
+            ) : (product.enable_text_customization || product.enable_artwork_upload) && (
               <div className={classes.card}>
                 <CustomizationBox
                   product={product}

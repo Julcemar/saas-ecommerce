@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.database import get_db
-from app.models.product import Product, ProductVariant, ProductWholesaleTier
+from app.models.product import Product, ProductVariant, ProductWholesaleTier, ProductCustomizationField
 from app.models.category import Category
 from app.models.user import User
 from app.schemas.product import (
@@ -60,7 +60,11 @@ def _sync_status_flags(status_val: Optional[str], is_active_val: Optional[bool])
 async def _load_product_full(db: AsyncSession, product_id: Any, tenant_id: Any) -> Product:
     res = await db.execute(
         select(Product)
-        .options(selectinload(Product.wholesale_tiers), selectinload(Product.variants))
+        .options(
+            selectinload(Product.wholesale_tiers),
+            selectinload(Product.variants),
+            selectinload(Product.customization_fields),
+        )
         .where(Product.id == product_id, Product.tenant_id == tenant_id)
     )
     return res.scalar_one()
@@ -78,7 +82,11 @@ async def list_products(
     tenant_id = tenant_dict["id"]
     stmt = (
         select(Product)
-        .options(selectinload(Product.wholesale_tiers), selectinload(Product.variants))
+        .options(
+            selectinload(Product.wholesale_tiers),
+            selectinload(Product.variants),
+            selectinload(Product.customization_fields),
+        )
         .where(
             Product.tenant_id == tenant_id,
             Product.is_active == True,
@@ -123,7 +131,11 @@ async def list_admin_products(
 
     stmt = (
         select(Product)
-        .options(selectinload(Product.wholesale_tiers), selectinload(Product.variants))
+        .options(
+            selectinload(Product.wholesale_tiers),
+            selectinload(Product.variants),
+            selectinload(Product.customization_fields),
+        )
         .where(Product.tenant_id == tenant_id)
     )
 
@@ -164,7 +176,11 @@ async def get_admin_product_detail(
 
     stmt = (
         select(Product)
-        .options(selectinload(Product.wholesale_tiers), selectinload(Product.variants))
+        .options(
+            selectinload(Product.wholesale_tiers),
+            selectinload(Product.variants),
+            selectinload(Product.customization_fields),
+        )
         .where(Product.id == product_id, Product.tenant_id == tenant_id)
     )
     product = (await db.execute(stmt)).scalar_one_or_none()
@@ -183,7 +199,11 @@ async def get_product_detail(
     tenant_id = tenant_dict["id"]
     stmt = (
         select(Product)
-        .options(selectinload(Product.wholesale_tiers), selectinload(Product.variants))
+        .options(
+            selectinload(Product.wholesale_tiers),
+            selectinload(Product.variants),
+            selectinload(Product.customization_fields),
+        )
         .where(Product.tenant_id == tenant_id, Product.is_active == True)
     )
 
@@ -218,7 +238,7 @@ async def create_product(
     if (await db.execute(dup_stmt)).scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Já existe um produto com este slug ou SKU nesta loja.")
 
-    product_data = payload.model_dump(exclude={"wholesale_tiers", "variants"})
+    product_data = payload.model_dump(exclude={"wholesale_tiers", "variants", "customization_fields"})
     cover_url, gallery = _normalize_images(product_data.get("image_url"), product_data.get("images_json"))
     status_str, active_bool = _sync_status_flags(product_data.get("status"), product_data.get("is_active"))
     product_data["image_url"] = cover_url
@@ -250,6 +270,16 @@ async def create_product(
                 **v_dict,
             ))
 
+    if payload.customization_fields:
+        for idx, cf_data in enumerate(payload.customization_fields):
+            cf_dict = cf_data.model_dump(exclude={"id"})
+            cf_dict["position"] = cf_dict.get("position", idx)
+            db.add(ProductCustomizationField(
+                tenant_id=tenant_id,
+                product_id=product.id,
+                **cf_dict,
+            ))
+
     await db.commit()
     full_prod = await _load_product_full(db, product.id, tenant_id)
     return ProductResponse.model_validate(full_prod)
@@ -268,14 +298,18 @@ async def update_product(
 
     stmt = (
         select(Product)
-        .options(selectinload(Product.wholesale_tiers), selectinload(Product.variants))
+        .options(
+            selectinload(Product.wholesale_tiers),
+            selectinload(Product.variants),
+            selectinload(Product.customization_fields),
+        )
         .where(Product.id == product_id, Product.tenant_id == tenant_id)
     )
     product = (await db.execute(stmt)).scalar_one_or_none()
     if not product:
         raise HTTPException(status_code=404, detail="Produto não encontrado.")
 
-    update_data = payload.model_dump(exclude={"wholesale_tiers", "variants"}, exclude_unset=True)
+    update_data = payload.model_dump(exclude={"wholesale_tiers", "variants", "customization_fields"}, exclude_unset=True)
 
     if "category_id" in update_data:
         await _validate_category_ownership(db, tenant_id, update_data["category_id"])
@@ -345,6 +379,26 @@ async def update_product(
                 **v_dict,
             ))
         product.product_type = "variable" if len(payload.variants) > 0 else "simple"
+
+    if payload.customization_fields is not None:
+        del_cf_res = await db.execute(
+            select(ProductCustomizationField).where(
+                ProductCustomizationField.product_id == product.id,
+                ProductCustomizationField.tenant_id == tenant_id,
+            )
+        )
+        for old_cf in del_cf_res.scalars().all():
+            await db.delete(old_cf)
+        await db.flush()
+
+        for idx, cf_data in enumerate(payload.customization_fields):
+            cf_dict = cf_data.model_dump(exclude={"id"})
+            cf_dict["position"] = idx
+            db.add(ProductCustomizationField(
+                tenant_id=tenant_id,
+                product_id=product.id,
+                **cf_dict,
+            ))
 
     await db.commit()
     full_prod = await _load_product_full(db, product.id, tenant_id)

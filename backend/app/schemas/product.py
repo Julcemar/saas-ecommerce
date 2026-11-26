@@ -45,6 +45,29 @@ class ProductVariantResponse(ProductVariantBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class CustomizationFieldBase(BaseModel):
+    label: str
+    field_type: str = "TEXT"  # TEXT, TEXTAREA, SELECT, COLOR_SWATCH, FILE_UPLOAD
+    placeholder: Optional[str] = None
+    options: List[Any] = Field(default_factory=list)
+    max_length: Optional[int] = None
+    additional_price: Decimal = Field(default=Decimal("0.00"), ge=0)
+    is_required: bool = False
+    position: int = 0
+
+
+class CustomizationFieldCreate(CustomizationFieldBase):
+    id: Optional[UUID] = None
+
+
+class CustomizationFieldResponse(CustomizationFieldBase):
+    id: UUID
+    tenant_id: UUID
+    product_id: UUID
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ProductBase(BaseModel):
     category_id: Optional[UUID] = None
     name: str
@@ -97,6 +120,7 @@ class ProductBase(BaseModel):
 class ProductCreate(ProductBase):
     wholesale_tiers: Optional[List[WholesaleTierCreate]] = []
     variants: Optional[List[ProductVariantCreate]] = []
+    customization_fields: Optional[List[CustomizationFieldCreate]] = []
 
 
 class ProductUpdate(BaseModel):
@@ -143,6 +167,7 @@ class ProductUpdate(BaseModel):
 
     wholesale_tiers: Optional[List[WholesaleTierCreate]] = None
     variants: Optional[List[ProductVariantCreate]] = None
+    customization_fields: Optional[List[CustomizationFieldCreate]] = None
 
 
 class ProductQuickUpdate(BaseModel):
@@ -160,5 +185,6 @@ class ProductResponse(ProductBase):
     created_at: datetime
     wholesale_tiers: List[WholesaleTierResponse] = []
     variants: List[ProductVariantResponse] = []
+    customization_fields: List[CustomizationFieldResponse] = []
 
     model_config = ConfigDict(from_attributes=True)

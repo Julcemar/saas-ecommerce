@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { fetchApi, ProductItem } from "@/lib/api";
 import { PRODUCTION_STAGES } from "@/lib/orderHelpers";
 import { FiArrowLeft, FiPlus, FiTrash2, FiSave, FiAlertCircle } from "react-icons/fi";
@@ -20,9 +20,14 @@ interface ManualItemDraft {
   art_approved: boolean;
 }
 
-export default function AdminNewManualOrderPage() {
+function NewManualOrderContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedCustomerId = searchParams.get("customer_id") || "";
+
   const [catalog, setCatalog] = useState<ProductItem[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [selectedCustomerId, setSelectedCustomerId] = useState(preselectedCustomerId);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -65,13 +70,45 @@ export default function AdminNewManualOrderPage() {
     },
   ]);
 
-  useEffect(() => {
-    async function loadCatalog() {
-      const res = await fetchApi("/products/admin");
-      if (res.ok) setCatalog(await res.json());
+  const applyCustomer = (c: any) => {
+    if (!c) {
+      setSelectedCustomerId("");
+      return;
     }
-    loadCatalog();
-  }, []);
+    setSelectedCustomerId(c.id);
+    setCustomerName(c.full_name || "");
+    setCustomerPhone(c.phone || "");
+    setCustomerEmail(c.email || "");
+    setCustomerTaxId(c.tax_id || "");
+    const defAddr = (c.addresses || []).find((a: any) => a.is_default) || c.addresses?.[0];
+    if (defAddr) {
+      setStreet(defAddr.street || "");
+      setNumber(defAddr.number || "");
+      setNeighborhood(defAddr.neighborhood || "");
+      setCity(defAddr.city || "");
+      setStateUf(defAddr.state || "");
+      setPostalCode(defAddr.postal_code || "");
+    }
+  };
+
+  useEffect(() => {
+    async function loadInitial() {
+      const [prodRes, custRes] = await Promise.all([
+        fetchApi("/products/admin"),
+        fetchApi("/customers"),
+      ]);
+      if (prodRes.ok) setCatalog(await prodRes.json());
+      if (custRes.ok) {
+        const custList = await custRes.json();
+        setCustomers(custList);
+        if (preselectedCustomerId) {
+          const found = custList.find((c: any) => c.id === preselectedCustomerId);
+          if (found) applyCustomer(found);
+        }
+      }
+    }
+    loadInitial();
+  }, [preselectedCustomerId]);
 
   const handleSelectProduct = (idx: number, prodId: string) => {
     const found = catalog.find((p) => p.id === prodId);
@@ -109,6 +146,7 @@ export default function AdminNewManualOrderPage() {
       const res = await fetchApi("/orders/manual", {
         method: "POST",
         body: JSON.stringify({
+          customer_id: selectedCustomerId || null,
           customer_name: customerName.trim(),
           customer_phone: customerPhone.trim(),
           customer_email: customerEmail.trim() || null,
@@ -193,6 +231,26 @@ export default function AdminNewManualOrderPage() {
             <h2 className="font-heading text-sm font-bold text-content-primary">
               Dados do Cliente e Entrega
             </h2>
+            <div>
+              <label className="block font-semibold mb-1">
+                Selecionar Cliente Cadastrado (opcional — ou preencha abaixo para criar novo)
+              </label>
+              <select
+                value={selectedCustomerId}
+                onChange={(e) => {
+                  const found = customers.find((c) => c.id === e.target.value);
+                  applyCustomer(found || null);
+                }}
+                className="input-theme w-full"
+              >
+                <option value="">— Novo cliente / Digitar manualmente —</option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.full_name} {c.phone ? `(${c.phone})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block font-semibold mb-1">Nome Completo / Empresa *</label>
@@ -524,5 +582,13 @@ export default function AdminNewManualOrderPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function AdminNewManualOrderPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-xs">Carregando...</div>}>
+      <NewManualOrderContent />
+    </Suspense>
   );
 }

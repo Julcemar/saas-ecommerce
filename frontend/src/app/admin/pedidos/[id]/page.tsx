@@ -392,6 +392,37 @@ export default function AdminOrderDetailPage() {
                           />
                         </div>
                       </div>
+
+                      {Array.isArray(it.customization_answers) && it.customization_answers.length > 0 && (
+                        <div className="pt-2 border-t border-[#084D6E]/15 space-y-1.5">
+                          <span className="text-[10px] font-bold uppercase text-content-secondary block">
+                            Respostas do Cliente na Vitrine:
+                          </span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {it.customization_answers.map((ans: any, aIdx: number) => (
+                              <div
+                                key={aIdx}
+                                className="p-2 rounded bg-bg-surface border border-border-theme text-[11px]"
+                              >
+                                <span className="font-semibold text-content-secondary block">
+                                  {ans.label}:
+                                </span>
+                                {ans.field_type === "FILE_UPLOAD" ? (
+                                  <a
+                                    href={ans.value}
+                                    target="_blank"
+                                    className="text-brand-primary underline font-semibold"
+                                  >
+                                    Abrir arquivo enviado
+                                  </a>
+                                ) : (
+                                  <span className="font-semibold text-content-primary">{ans.value}</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Gestão de Arquivos de Arte */}

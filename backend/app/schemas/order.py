@@ -11,6 +11,7 @@ class OrderItemInput(BaseModel):
     variant_name: Optional[str] = None
     custom_text: Optional[str] = None
     customization_notes: Optional[str] = None
+    customization_answers: List[Dict[str, Any]] = Field(default_factory=list)
     artwork_url: Optional[str] = None
     artwork_filename: Optional[str] = None
 
@@ -25,6 +26,7 @@ class ManualOrderItemInput(BaseModel):
     quantity: int = Field(..., ge=1)
     custom_text: Optional[str] = None
     customization_notes: Optional[str] = None
+    customization_answers: List[Dict[str, Any]] = Field(default_factory=list)
     artwork_url: Optional[str] = None
     approved_art_url: Optional[str] = None
     art_approved: bool = False
@@ -63,6 +65,7 @@ class OrderCreate(BaseModel):
 
 
 class ManualOrderCreate(BaseModel):
+    customer_id: Optional[UUID] = None
     customer_name: str
     customer_phone: str
     customer_email: Optional[str] = None
@@ -82,6 +85,7 @@ class ManualOrderCreate(BaseModel):
 class OrderItemUpdate(BaseModel):
     custom_text: Optional[str] = None
     customization_notes: Optional[str] = None
+    customization_answers: List[Dict[str, Any]] = Field(default_factory=list)
     artwork_url: Optional[str] = None
     approved_art_url: Optional[str] = None
     art_approved: Optional[bool] = None
@@ -119,6 +123,7 @@ class OrderItemResponse(BaseModel):
     subtotal: Decimal
     custom_text: Optional[str] = None
     customization_notes: Optional[str] = None
+    customization_answers: List[Dict[str, Any]] = Field(default_factory=list)
     artwork_url: Optional[str] = None
     artwork_filename: Optional[str] = None
     artwork_status: str

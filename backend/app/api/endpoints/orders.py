@@ -9,6 +9,7 @@ from sqlalchemy import select, desc
 from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.models.order import Order, OrderItem, OrderHistory
+from app.models.customer import Customer
 from app.models.product import Product
 from app.models.user import User
 from app.schemas.order import (
@@ -118,9 +119,49 @@ async def create_manual_order(
     order_number = f"#PED-{uuid_lib.uuid4().hex[:4].upper()}"
     due = payload.due_date or (date.today() + timedelta(days=3))
 
+    # Vincula ou cria o cliente dentro do mesmo tenant
+    linked_customer_id = None
+    if payload.customer_id:
+        c_res = await db.execute(
+            select(Customer).where(Customer.id == payload.customer_id, Customer.tenant_id == tenant_id)
+        )
+        cust_obj = c_res.scalar_one_or_none()
+        if not cust_obj:
+            raise HTTPException(status_code=400, detail="Cliente informado não pertence a esta loja.")
+        linked_customer_id = cust_obj.id
+    else:
+        clean_email = (payload.customer_email or "").strip().lower() or None
+        clean_tax = (payload.customer_tax_id or "").strip() or None
+        cust_obj = None
+        if clean_email:
+            cust_obj = (
+                await db.execute(
+                    select(Customer).where(Customer.tenant_id == tenant_id, Customer.email == clean_email)
+                )
+            ).scalar_one_or_none()
+        if not cust_obj and clean_tax:
+            cust_obj = (
+                await db.execute(
+                    select(Customer).where(Customer.tenant_id == tenant_id, Customer.tax_id == clean_tax)
+                )
+            ).scalar_one_or_none()
+        if not cust_obj:
+            cust_obj = Customer(
+                tenant_id=tenant_id,
+                person_type="PJ" if clean_tax and len(clean_tax) > 14 else "PF",
+                full_name=payload.customer_name.strip(),
+                tax_id=clean_tax,
+                email=clean_email,
+                phone=payload.customer_phone.strip(),
+            )
+            db.add(cust_obj)
+            await db.flush()
+        linked_customer_id = cust_obj.id
+
     order = Order(
         tenant_id=tenant_id,
         order_number=order_number,
+        customer_id=linked_customer_id,
         status="payment_confirmed" if payload.payment_status == "PAID" else "pending_payment",
         production_status=payload.production_status or "NEW",
         due_date=due,
