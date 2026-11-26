@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from sqlalchemy import (
     Column, String, Boolean, DateTime, Text, Integer, Numeric,
-    ForeignKey
+    ForeignKey, UniqueConstraint
 )
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -11,6 +11,10 @@ from app.models.base_types import GUID, JSON_TYPE, ARRAY_TYPE
 
 class Product(Base):
     __tablename__ = "products"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "slug", name="uq_products_tenant_slug"),
+        UniqueConstraint("tenant_id", "sku", name="uq_products_tenant_sku"),
+    )
 
     id = Column(GUID, primary_key=True, default=uuid.uuid4)
     tenant_id = Column(GUID, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -25,17 +29,26 @@ class Product(Base):
     compare_at_price = Column(Numeric(12, 2), nullable=True)
     cost_price = Column(Numeric(12, 2), nullable=True)
     image_url = Column(Text, nullable=True)
+    images_json = Column(JSON_TYPE, nullable=False, default=list)
 
-    # Dimensões e frete
+    # Status e destaque
+    status = Column(String(20), nullable=False, default="ACTIVE")  # 'ACTIVE', 'DRAFT'
+    badge_label = Column(String(50), nullable=True)
+    is_featured = Column(Boolean, nullable=False, default=False)
+    is_active = Column(Boolean, nullable=False, default=True)
+
+    # Estoque
+    track_inventory = Column(Boolean, nullable=False, default=False)
+    stock_quantity = Column(Integer, nullable=False, default=0)
+    low_stock_threshold = Column(Integer, nullable=False, default=5)
+    allow_backorder = Column(Boolean, nullable=False, default=False)
+
+    # Dimensões e frete (Melhor Envio)
+    is_physical = Column(Boolean, nullable=False, default=True)
     weight_grams = Column(Integer, nullable=False, default=300)
     length_cm = Column(Integer, nullable=False, default=16)
     width_cm = Column(Integer, nullable=False, default=12)
     height_cm = Column(Integer, nullable=False, default=10)
-
-    # Badges Pop-Art & Visibilidade
-    badge_label = Column(String(50), nullable=True)
-    is_featured = Column(Boolean, nullable=False, default=False)
-    is_active = Column(Boolean, nullable=False, default=True)
 
     # Personalização industrial
     enable_text_customization = Column(Boolean, nullable=False, default=False)
@@ -47,6 +60,10 @@ class Product(Base):
     allowed_upload_formats = Column(ARRAY_TYPE, nullable=False, default=lambda: ["png", "jpg", "jpeg", "svg", "pdf"])
 
     production_lead_time_days = Column(Integer, nullable=False, default=0)
+
+    # SEO
+    seo_title = Column(String(70), nullable=True)
+    seo_description = Column(String(160), nullable=True)
 
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
@@ -65,6 +82,9 @@ class Product(Base):
 
 class ProductVariant(Base):
     __tablename__ = "product_variants"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "sku", name="uq_variants_tenant_sku"),
+    )
 
     id = Column(GUID, primary_key=True, default=uuid.uuid4)
     tenant_id = Column(GUID, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -76,6 +96,7 @@ class ProductVariant(Base):
     final_price = Column(Numeric(12, 2), nullable=False)
     stock_quantity = Column(Integer, nullable=True)
     weight_grams = Column(Integer, nullable=True)
+    image_url = Column(Text, nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

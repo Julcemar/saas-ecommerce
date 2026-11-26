@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 from uuid import UUID
 from datetime import datetime
@@ -12,6 +12,8 @@ class CategoryBase(BaseModel):
     display_order: int = 0
     is_active: bool = True
     parent_id: Optional[UUID] = None
+    seo_title: Optional[str] = Field(default=None, max_length=70)
+    seo_description: Optional[str] = Field(default=None, max_length=160)
 
 
 class CategoryCreate(CategoryBase):
@@ -25,6 +27,14 @@ class CategoryUpdate(BaseModel):
     image_url: Optional[str] = None
     display_order: Optional[int] = None
     is_active: Optional[bool] = None
+    parent_id: Optional[UUID] = None
+    seo_title: Optional[str] = Field(default=None, max_length=70)
+    seo_description: Optional[str] = Field(default=None, max_length=160)
+
+
+class CategoryReorderItem(BaseModel):
+    id: UUID
+    display_order: int
     parent_id: Optional[UUID] = None
 
 

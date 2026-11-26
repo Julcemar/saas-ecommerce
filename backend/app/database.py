@@ -57,6 +57,36 @@ AsyncSessionLocal = async_sessionmaker(
 Base = declarative_base()
 
 
+async def _ensure_sqlite_columns(conn) -> None:
+    """Garante novas colunas no SQLite local sem perder dados existentes."""
+    sqlite_migrations = {
+        "categories": [
+            ("seo_title", "VARCHAR(70)"),
+            ("seo_description", "VARCHAR(160)"),
+        ],
+        "products": [
+            ("images_json", "JSON NOT NULL DEFAULT '[]'"),
+            ("status", "VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'"),
+            ("track_inventory", "BOOLEAN NOT NULL DEFAULT 0"),
+            ("stock_quantity", "INTEGER NOT NULL DEFAULT 0"),
+            ("low_stock_threshold", "INTEGER NOT NULL DEFAULT 5"),
+            ("allow_backorder", "BOOLEAN NOT NULL DEFAULT 0"),
+            ("is_physical", "BOOLEAN NOT NULL DEFAULT 1"),
+            ("seo_title", "VARCHAR(70)"),
+            ("seo_description", "VARCHAR(160)"),
+        ],
+        "product_variants": [
+            ("image_url", "TEXT"),
+        ],
+    }
+    for table, cols in sqlite_migrations.items():
+        res = await conn.execute(text(f"PRAGMA table_info({table})"))
+        existing = {row[1] for row in res.fetchall()}
+        for col_name, col_def in cols:
+            if col_name not in existing:
+                await conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_def}"))
+
+
 async def init_db_resilient():
     """Inicializa as tabelas do banco de dados, com fallback automático para SQLite apenas fora da produção."""
     global engine, AsyncSessionLocal
@@ -66,7 +96,19 @@ async def init_db_resilient():
             if conn.dialect.name == "postgresql":
                 migrations = [
                     "ALTER TABLE storefront_banners ADD COLUMN IF NOT EXISTS config_json JSONB DEFAULT '{}'::jsonb;",
+                    "ALTER TABLE categories ADD COLUMN IF NOT EXISTS seo_title VARCHAR(70);",
+                    "ALTER TABLE categories ADD COLUMN IF NOT EXISTS seo_description VARCHAR(160);",
                     "ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;",
+                    "ALTER TABLE products ADD COLUMN IF NOT EXISTS images_json JSONB NOT NULL DEFAULT '[]'::jsonb;",
+                    "ALTER TABLE products ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE';",
+                    "ALTER TABLE products ADD COLUMN IF NOT EXISTS track_inventory BOOLEAN NOT NULL DEFAULT false;",
+                    "ALTER TABLE products ADD COLUMN IF NOT EXISTS stock_quantity INT NOT NULL DEFAULT 0;",
+                    "ALTER TABLE products ADD COLUMN IF NOT EXISTS low_stock_threshold INT NOT NULL DEFAULT 5;",
+                    "ALTER TABLE products ADD COLUMN IF NOT EXISTS allow_backorder BOOLEAN NOT NULL DEFAULT false;",
+                    "ALTER TABLE products ADD COLUMN IF NOT EXISTS is_physical BOOLEAN NOT NULL DEFAULT true;",
+                    "ALTER TABLE products ADD COLUMN IF NOT EXISTS seo_title VARCHAR(70);",
+                    "ALTER TABLE products ADD COLUMN IF NOT EXISTS seo_description VARCHAR(160);",
+                    "ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS image_url TEXT;",
                     "ALTER TABLE products DROP CONSTRAINT IF EXISTS products_compare_at_price_check;",
                     "ALTER TABLE users DROP CONSTRAINT IF EXISTS chk_user_tenant_role;",
                     "ALTER TABLE users ALTER COLUMN role DROP DEFAULT;",
@@ -79,6 +121,8 @@ async def init_db_resilient():
                 ]
                 for sql in migrations:
                     await conn.execute(text(sql))
+            else:
+                await _ensure_sqlite_columns(conn)
         logger.info(f"Banco de dados inicializado com sucesso ({engine.url.drivername}).")
     except Exception as e:
         logger.warning(f"Não foi possível conectar ao PostgreSQL ({e}).")
@@ -100,6 +144,7 @@ async def init_db_resilient():
         )
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+            await _ensure_sqlite_columns(conn)
         logger.info("Banco de dados SQLite (saas_local.db) inicializado com sucesso!")
 
 

@@ -180,6 +180,8 @@ CREATE TABLE categories (
     image_url TEXT,
     display_order INT NOT NULL DEFAULT 0,
     is_active BOOLEAN NOT NULL DEFAULT true,
+    seo_title VARCHAR(70),
+    seo_description VARCHAR(160),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -206,6 +208,15 @@ CREATE TABLE products (
     compare_at_price NUMERIC(12, 2) CHECK (compare_at_price IS NULL OR compare_at_price >= base_price),
     cost_price NUMERIC(12, 2) CHECK (cost_price IS NULL OR cost_price >= 0),
     image_url TEXT,
+    images_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    track_inventory BOOLEAN NOT NULL DEFAULT false,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    low_stock_threshold INT NOT NULL DEFAULT 5,
+    allow_backorder BOOLEAN NOT NULL DEFAULT false,
+    is_physical BOOLEAN NOT NULL DEFAULT true,
+    seo_title VARCHAR(70),
+    seo_description VARCHAR(160),
     
     -- Dimensões e cubagem física para cálculo de frete (Melhor Envio / Correios)
     weight_grams INT NOT NULL DEFAULT 300 CHECK (weight_grams > 0),
@@ -254,6 +265,7 @@ CREATE TABLE product_variants (
     final_price NUMERIC(12, 2) NOT NULL CHECK (final_price >= 0),
     stock_quantity INT, -- Null para produtos sem controle de estoque físico
     weight_grams INT,
+    image_url TEXT,
     is_active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -459,6 +471,8 @@ CREATE TABLE navigation_menu_items (
     badge_color VARCHAR(20) DEFAULT 'yellow',
     display_order INT NOT NULL DEFAULT 0,
     is_active BOOLEAN NOT NULL DEFAULT true,
+    seo_title VARCHAR(70),
+    seo_description VARCHAR(160),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
