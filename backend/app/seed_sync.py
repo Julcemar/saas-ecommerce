@@ -2,12 +2,12 @@ import json
 import logging
 import shutil
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -18,6 +18,7 @@ from app.models.category import Category
 from app.models.product import Product, ProductVariant, ProductWholesaleTier
 from app.models.storefront import StorefrontBanner
 from app.models.integration import TenantIntegration
+from app.models.order import Order, OrderItem, OrderHistory
 
 logger = logging.getLogger("saas-backend")
 
@@ -430,3 +431,154 @@ async def sync_seed_data() -> None:
             logger.info(f"[SeedSync] Sincronização concluída: {counts}")
         else:
             logger.info("[SeedSync] Banco já sincronizado (nenhum registro novo pendente).")
+
+        await _seed_jestein_sample_orders(db)
+
+
+async def _seed_jestein_sample_orders(db: AsyncSession) -> None:
+    """Popula 6 pedidos de exemplo realistas para Jestein Personalizados caso ainda não haja pedidos."""
+    try:
+        j_res = await db.execute(select(Tenant).where(Tenant.slug == "jestein"))
+        jestein = j_res.scalar_one_or_none()
+        if not jestein:
+            return
+
+        cnt_res = await db.execute(
+            select(func.count(Order.id)).where(Order.tenant_id == jestein.id)
+        )
+        if (cnt_res.scalar() or 0) > 0:
+            return
+
+        today = date.today()
+        samples = [
+            {
+                "order_number": "#1041",
+                "production_status": "NEW",
+                "payment_status": "PAID",
+                "priority": "URGENT",
+                "due_date": today - timedelta(days=1),  # Atrasado
+                "customer": {"full_name": "Mariana Costa (TechBR)", "phone": "(41) 99811-2233", "email": "mariana@techbr.com.br", "tax_id": "12.345.678/0001-90"},
+                "address": {"street": "Av. Batel", "number": "1450", "neighborhood": "Batel", "city": "Curitiba", "state": "PR", "postal_code": "80420-090"},
+                "items": [
+                    {"name": "Caneca de Cerâmica Branca Personalizada 325ml", "sku": "CAN-CER-325", "qty": 24, "price": Decimal("32.90"), "custom_text": "TechBR Summit 2026", "notes": "Logo centralizado em frente e verso", "art_approved": False, "img": "/themes/neo_brutalist/caneca-prod-large.png"},
+                ],
+            },
+            {
+                "order_number": "#1042",
+                "production_status": "ART_APPROVAL",
+                "payment_status": "PAID",
+                "priority": "NORMAL",
+                "due_date": today,  # Vence hoje
+                "customer": {"full_name": "Lucas Andrade", "phone": "(11) 99455-8877", "email": "lucas.andrade@gmail.com", "tax_id": "345.678.901-22"},
+                "address": {"street": "Rua Augusta", "number": "910", "neighborhood": "Consolação", "city": "São Paulo", "state": "SP", "postal_code": "01304-001"},
+                "items": [
+                    {"name": "Garrafa com Mosquetão", "sku": "JES-GARRAFA-CO", "qty": 15, "price": Decimal("38.00"), "custom_text": "Equipe Alpha CrossFit", "notes": "Gravação a laser lateral", "art_approved": False, "img": "/uploads/jestein/garrafa-com-mosquetao.jpg"},
+                ],
+            },
+            {
+                "order_number": "#1043",
+                "production_status": "IN_PRODUCTION",
+                "payment_status": "PAID",
+                "priority": "URGENT",
+                "due_date": today + timedelta(days=1),
+                "customer": {"full_name": "Clínica Sorriso Pleno", "phone": "(41) 99123-4567", "email": "compras@sorrisopleno.com.br", "tax_id": "23.456.789/0001-10"},
+                "address": {"street": "Rua XV de Novembro", "number": "320", "neighborhood": "Centro", "city": "Curitiba", "state": "PR", "postal_code": "80020-310"},
+                "items": [
+                    {"name": "Caneca Térmica Inox Escovado Personalizada 500ml", "sku": "CAN-TER-500", "qty": 10, "price": Decimal("42.90"), "custom_text": "Dra. Camila & Equipe", "notes": "Fonte serifada elegante", "art_approved": True, "img": "/themes/neo_brutalist/caneca-prod-large.png"},
+                ],
+            },
+            {
+                "order_number": "#1044",
+                "production_status": "IN_PRODUCTION",
+                "payment_status": "PENDING",
+                "priority": "NORMAL",
+                "due_date": today + timedelta(days=3),
+                "customer": {"full_name": "Fernanda Lima", "phone": "(47) 99600-1122", "email": "fernanda.lima@uol.com.br", "tax_id": "556.778.899-00"},
+                "address": {"street": "Av. Brasil", "number": "2200", "neighborhood": "Centro", "city": "Balneário Camboriú", "state": "SC", "postal_code": "88330-040"},
+                "items": [
+                    {"name": "Kit Torre 2 xícaras com Suporte Metálico", "sku": "JES-KIT-TORRE-", "qty": 2, "price": Decimal("79.90"), "custom_text": "Casamento F & R - 12/12", "notes": "Embalar individualmente com laço", "art_approved": True, "img": "/uploads/jestein/kit-torre-2-xicaras-com-suporte-metalico.jpg"},
+                ],
+            },
+            {
+                "order_number": "#1045",
+                "production_status": "QUALITY_PACKING",
+                "payment_status": "PAID",
+                "priority": "NORMAL",
+                "due_date": today + timedelta(days=2),
+                "customer": {"full_name": "Rafael Mendes", "phone": "(21) 98877-6655", "email": "rafael@mendesarch.com", "tax_id": "998.877.665-11"},
+                "address": {"street": "Rua Visconde de Pirajá", "number": "414", "neighborhood": "Ipanema", "city": "Rio de Janeiro", "state": "RJ", "postal_code": "22410-002"},
+                "items": [
+                    {"name": "Garrafa Plástica 500ml", "sku": "JES-GARRAFA-PL", "qty": 50, "price": Decimal("8.00"), "custom_text": "Evento Arquitetura Rio", "notes": "Silk 1 cor branco", "art_approved": True, "img": "/uploads/jestein/garrafa-com-mosquetao.jpg"},
+                ],
+            },
+            {
+                "order_number": "#1046",
+                "production_status": "READY_TO_SHIP",
+                "payment_status": "PAID",
+                "priority": "NORMAL",
+                "due_date": today + timedelta(days=1),
+                "customer": {"full_name": "Escola Futuro Brilhante", "phone": "(41) 99988-7766", "email": "direcao@futurobrilhante.edu.br", "tax_id": "45.678.912/0001-55"},
+                "address": {"street": "Av. Sete de Setembro", "number": "4100", "neighborhood": "Água Verde", "city": "Curitiba", "state": "PR", "postal_code": "80250-210"},
+                "items": [
+                    {"name": "Caneca de Cerâmica Branca Personalizada 325ml", "sku": "CAN-CER-325", "qty": 30, "price": Decimal("29.90"), "custom_text": "Formatura 9º Ano 2026", "notes": "Caixinhas individuais inclusas", "art_approved": True, "img": "/themes/neo_brutalist/caneca-prod-large.png"},
+                ],
+            },
+        ]
+
+        for s in samples:
+            subtotal = sum(it["price"] * it["qty"] for it in s["items"])
+            shipping = Decimal("24.90")
+            order = Order(
+                tenant_id=jestein.id,
+                order_number=s["order_number"],
+                status="in_production" if s["production_status"] != "NEW" else "payment_confirmed",
+                production_status=s["production_status"],
+                due_date=s["due_date"],
+                priority=s["priority"],
+                items_subtotal=subtotal,
+                discount_amount=Decimal("0.00"),
+                shipping_amount=shipping,
+                total_amount=subtotal + shipping,
+                payment_method="pix",
+                payment_status=s["payment_status"],
+                shipping_provider="melhorenvio",
+                shipping_service_name="SEDEX",
+                estimated_production_days=3,
+                estimated_delivery_date=s["due_date"],
+                customer_snapshot=s["customer"],
+                shipping_address_snapshot=s["address"],
+                billing_address_snapshot=s["address"],
+            )
+            db.add(order)
+            await db.flush()
+
+            for it in s["items"]:
+                db.add(OrderItem(
+                    tenant_id=jestein.id,
+                    order_id=order.id,
+                    sku=it["sku"],
+                    name=it["name"],
+                    product_image_url=it["img"],
+                    unit_price=it["price"],
+                    quantity=it["qty"],
+                    subtotal=it["price"] * it["qty"],
+                    custom_text=it["custom_text"],
+                    customization_notes=it["notes"],
+                    art_approved=it["art_approved"],
+                    artwork_status="approved" if it["art_approved"] else "pending",
+                ))
+
+            db.add(OrderHistory(
+                tenant_id=jestein.id,
+                order_id=order.id,
+                actor_name="Sistema",
+                event_type="CREATED",
+                to_status=s["production_status"],
+                message=f"Pedido {s['order_number']} importado para a fila de produção.",
+            ))
+
+        await db.commit()
+        logger.info("[SeedSync] 6 pedidos de exemplo criados para Jestein Personalizados.")
+    except Exception as e:
+        await db.rollback()
+        logger.warning(f"[SeedSync] Aviso ao criar pedidos de exemplo: {e}")
