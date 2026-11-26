@@ -192,47 +192,83 @@ async def _sync_categories(db: AsyncSession, rows: List[Dict[str, Any]]) -> int:
 
 async def _sync_products(db: AsyncSession, rows: List[Dict[str, Any]]) -> int:
     inserted = 0
+    seen_skus = set()
+    seen_slugs = set()
+
+    # Carrega SKUs e slugs já existentes no banco para evitar violação de UNIQUE
+    existing_res = await db.execute(select(Product.tenant_id, Product.sku, Product.slug))
+    for tid, sku, slug in existing_res.all():
+        seen_skus.add((str(tid), sku))
+        seen_slugs.add((str(tid), slug))
+
     for row in rows:
         rid = _parse_uuid(row["id"])
+        tid = _parse_uuid(row["tenant_id"])
         if await _exists_by_id(db, Product, rid):
             continue
 
-        db.add(Product(
-            id=rid,
-            tenant_id=_parse_uuid(row["tenant_id"]),
-            category_id=_parse_uuid(row.get("category_id")),
-            name=row["name"],
-            slug=row["slug"],
-            sku=row["sku"],
-            product_type=row.get("product_type") or "simple",
-            description=row.get("description"),
-            short_description=row.get("short_description"),
-            base_price=_parse_decimal(row["base_price"], Decimal("0.00")),
-            compare_at_price=_parse_decimal(row.get("compare_at_price")),
-            cost_price=_parse_decimal(row.get("cost_price")),
-            image_url=row.get("image_url"),
-            weight_grams=int(row.get("weight_grams") or 300),
-            length_cm=int(row.get("length_cm") or 16),
-            width_cm=int(row.get("width_cm") or 12),
-            height_cm=int(row.get("height_cm") or 10),
-            badge_label=row.get("badge_label"),
-            is_featured=_parse_bool(row.get("is_featured"), False),
-            is_active=_parse_bool(row.get("is_active"), True),
-            enable_text_customization=_parse_bool(row.get("enable_text_customization"), False),
-            text_customization_label=row.get("text_customization_label") or "Nome ou Frase para Personalizar",
-            text_max_length=int(row.get("text_max_length") or 40),
-            enable_artwork_upload=_parse_bool(row.get("enable_artwork_upload"), False),
-            upload_max_size_mb=int(row.get("upload_max_size_mb") or 10),
-            allowed_upload_formats=_parse_json(
-                row.get("allowed_upload_formats"),
-                ["png", "jpg", "jpeg", "svg", "pdf"],
-            ),
-            production_lead_time_days=int(row.get("production_lead_time_days") or 0),
-            created_at=_parse_dt(row.get("created_at")) or datetime.utcnow(),
-            updated_at=_parse_dt(row.get("updated_at")) or datetime.utcnow(),
-        ))
-        inserted += 1
-    await db.flush()
+        sku = (row.get("sku") or f"SKU-{str(rid)[:8]}").strip()
+        if (str(tid), sku) in seen_skus:
+            sku = f"{sku[:80]}-{str(rid)[:6]}"
+        seen_skus.add((str(tid), sku))
+
+        slug = (row.get("slug") or f"prod-{str(rid)[:8]}").strip()
+        if (str(tid), slug) in seen_slugs:
+            slug = f"{slug[:240]}-{str(rid)[:6]}"
+        seen_slugs.add((str(tid), slug))
+
+        base_price = _parse_decimal(row.get("base_price"), Decimal("0.00"))
+        if base_price is None or base_price < Decimal("0.00"):
+            base_price = Decimal("0.00")
+
+        compare_at_price = _parse_decimal(row.get("compare_at_price"))
+        if compare_at_price is not None and compare_at_price < base_price:
+            compare_at_price = None
+
+        cost_price = _parse_decimal(row.get("cost_price"))
+        if cost_price is not None and cost_price < Decimal("0.00"):
+            cost_price = None
+
+        try:
+            async with db.begin_nested():
+                db.add(Product(
+                    id=rid,
+                    tenant_id=tid,
+                    category_id=_parse_uuid(row.get("category_id")),
+                    name=row["name"],
+                    slug=slug,
+                    sku=sku,
+                    product_type=row.get("product_type") or "simple",
+                    description=row.get("description"),
+                    short_description=row.get("short_description"),
+                    base_price=base_price,
+                    compare_at_price=compare_at_price,
+                    cost_price=cost_price,
+                    image_url=row.get("image_url"),
+                    weight_grams=max(1, int(row.get("weight_grams") or 300)),
+                    length_cm=max(1, int(row.get("length_cm") or 16)),
+                    width_cm=max(1, int(row.get("width_cm") or 12)),
+                    height_cm=max(1, int(row.get("height_cm") or 10)),
+                    badge_label=row.get("badge_label"),
+                    is_featured=_parse_bool(row.get("is_featured"), False),
+                    is_active=_parse_bool(row.get("is_active"), True),
+                    enable_text_customization=_parse_bool(row.get("enable_text_customization"), False),
+                    text_customization_label=row.get("text_customization_label") or "Nome ou Frase para Personalizar",
+                    text_max_length=max(1, int(row.get("text_max_length") or 40)),
+                    enable_artwork_upload=_parse_bool(row.get("enable_artwork_upload"), False),
+                    upload_max_size_mb=max(1, int(row.get("upload_max_size_mb") or 10)),
+                    allowed_upload_formats=_parse_json(
+                        row.get("allowed_upload_formats"),
+                        ["png", "jpg", "jpeg", "svg", "pdf"],
+                    ),
+                    production_lead_time_days=max(0, int(row.get("production_lead_time_days") or 0)),
+                    created_at=_parse_dt(row.get("created_at")) or datetime.now(timezone.utc),
+                    updated_at=_parse_dt(row.get("updated_at")) or datetime.now(timezone.utc),
+                ))
+                await db.flush()
+            inserted += 1
+        except Exception as e:
+            logger.warning(f"[SeedSync] Produto ignorado ({row.get('name')} / {rid}): {e}")
     return inserted
 
 
@@ -243,23 +279,27 @@ async def _sync_variants(db: AsyncSession, rows: List[Dict[str, Any]]) -> int:
         if await _exists_by_id(db, ProductVariant, rid):
             continue
 
-        db.add(ProductVariant(
-            id=rid,
-            tenant_id=_parse_uuid(row["tenant_id"]),
-            product_id=_parse_uuid(row["product_id"]),
-            sku=row["sku"],
-            name=row["name"],
-            attribute_options=_parse_json(row.get("attribute_options"), {}),
-            price_modifier=_parse_decimal(row.get("price_modifier"), Decimal("0.00")),
-            final_price=_parse_decimal(row["final_price"], Decimal("0.00")),
-            stock_quantity=int(row["stock_quantity"]) if row.get("stock_quantity") is not None else None,
-            weight_grams=int(row["weight_grams"]) if row.get("weight_grams") is not None else None,
-            is_active=_parse_bool(row.get("is_active"), True),
-            created_at=_parse_dt(row.get("created_at")) or datetime.utcnow(),
-            updated_at=_parse_dt(row.get("updated_at")) or datetime.utcnow(),
-        ))
-        inserted += 1
-    await db.flush()
+        try:
+            async with db.begin_nested():
+                db.add(ProductVariant(
+                    id=rid,
+                    tenant_id=_parse_uuid(row["tenant_id"]),
+                    product_id=_parse_uuid(row["product_id"]),
+                    sku=row["sku"],
+                    name=row["name"],
+                    attribute_options=_parse_json(row.get("attribute_options"), {}),
+                    price_modifier=_parse_decimal(row.get("price_modifier"), Decimal("0.00")),
+                    final_price=_parse_decimal(row["final_price"], Decimal("0.00")),
+                    stock_quantity=int(row["stock_quantity"]) if row.get("stock_quantity") is not None else None,
+                    weight_grams=int(row["weight_grams"]) if row.get("weight_grams") is not None else None,
+                    is_active=_parse_bool(row.get("is_active"), True),
+                    created_at=_parse_dt(row.get("created_at")) or datetime.now(timezone.utc),
+                    updated_at=_parse_dt(row.get("updated_at")) or datetime.now(timezone.utc),
+                ))
+                await db.flush()
+            inserted += 1
+        except Exception as e:
+            logger.warning(f"[SeedSync] Variante ignorada ({rid}): {e}")
     return inserted
 
 
@@ -270,17 +310,21 @@ async def _sync_wholesale_tiers(db: AsyncSession, rows: List[Dict[str, Any]]) ->
         if await _exists_by_id(db, ProductWholesaleTier, rid):
             continue
 
-        db.add(ProductWholesaleTier(
-            id=rid,
-            tenant_id=_parse_uuid(row["tenant_id"]),
-            product_id=_parse_uuid(row["product_id"]),
-            min_quantity=int(row["min_quantity"]),
-            unit_price=_parse_decimal(row["unit_price"], Decimal("0.00")),
-            created_at=_parse_dt(row.get("created_at")) or datetime.utcnow(),
-            updated_at=_parse_dt(row.get("updated_at")) or datetime.utcnow(),
-        ))
-        inserted += 1
-    await db.flush()
+        try:
+            async with db.begin_nested():
+                db.add(ProductWholesaleTier(
+                    id=rid,
+                    tenant_id=_parse_uuid(row["tenant_id"]),
+                    product_id=_parse_uuid(row["product_id"]),
+                    min_quantity=max(1, int(row["min_quantity"])),
+                    unit_price=_parse_decimal(row["unit_price"], Decimal("0.01")),
+                    created_at=_parse_dt(row.get("created_at")) or datetime.now(timezone.utc),
+                    updated_at=_parse_dt(row.get("updated_at")) or datetime.now(timezone.utc),
+                ))
+                await db.flush()
+            inserted += 1
+        except Exception as e:
+            logger.warning(f"[SeedSync] Faixa de atacado ignorada ({rid}): {e}")
     return inserted
 
 

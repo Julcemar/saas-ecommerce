@@ -67,6 +67,7 @@ async def init_db_resilient():
                 migrations = [
                     "ALTER TABLE storefront_banners ADD COLUMN IF NOT EXISTS config_json JSONB DEFAULT '{}'::jsonb;",
                     "ALTER TABLE products ADD COLUMN IF NOT EXISTS image_url TEXT;",
+                    "ALTER TABLE products DROP CONSTRAINT IF EXISTS products_compare_at_price_check;",
                     "ALTER TABLE users DROP CONSTRAINT IF EXISTS chk_user_tenant_role;",
                     "ALTER TABLE users ALTER COLUMN role DROP DEFAULT;",
                     "ALTER TABLE users ALTER COLUMN role TYPE VARCHAR(50) USING role::text;",
