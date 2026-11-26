@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { fetchApi, TenantInfo, NavigationItem, NavigationSubItem } from "@/lib/api";
 import InteractiveHeroBanner, { BannerData, BannerConfig } from "@/components/InteractiveHeroBanner";
+import HomeCustomizerPanel from "@/components/admin/HomeCustomizerPanel";
 import {
   FiCheck,
   FiSave,
@@ -65,7 +66,7 @@ const DEFAULT_BANNER: BannerData = {
 };
 
 export default function AparenciaPage() {
-  const [activeTab, setActiveTab] = useState<"banner" | "navigation" | "theme">("banner");
+  const [activeTab, setActiveTab] = useState<"home" | "banner" | "navigation" | "theme">("home");
   const [tenant, setTenant] = useState<TenantInfo | null>(null);
   const [banner, setBanner] = useState<BannerData>(DEFAULT_BANNER);
 
@@ -579,7 +580,18 @@ export default function AparenciaPage() {
         </div>
 
         {/* Abas Superiores */}
-        <div className="flex items-center gap-2 bg-bg-subtle p-1 rounded-xl border border-border-theme">
+        <div className="flex flex-wrap items-center gap-2 bg-bg-subtle p-1 rounded-xl border border-border-theme">
+          <button
+            type="button"
+            onClick={() => setActiveTab("home")}
+            className={`text-xs font-bold py-2 px-3.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === "home"
+                ? "bg-[#084D6E] text-white shadow-sm"
+                : "text-content-secondary hover:text-content-primary"
+            }`}
+          >
+            <span>🏠 Personalização da Home</span>
+          </button>
           <button
             type="button"
             onClick={() => setActiveTab("banner")}
@@ -625,6 +637,18 @@ export default function AparenciaPage() {
           <FiCheck className="w-4 h-4" />
           <span>{successMsg}</span>
         </div>
+      )}
+
+      {activeTab === "home" && (
+        <HomeCustomizerPanel
+          tenant={tenant}
+          bannerData={banner}
+          onTenantUpdated={(updated) => {
+            setTenant(updated);
+            setLogoUrl(updated.logo_url || null);
+          }}
+          onGoToMenuTab={() => setActiveTab("navigation")}
+        />
       )}
 
       {/* ABA 1: BANNER PRINCIPAL DA PÁGINA INICIAL */}

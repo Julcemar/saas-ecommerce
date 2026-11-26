@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, MouseEvent } from "react";
 import { TenantInfo, ProductItem, NavigationItem, fetchApi } from "./api";
 import { BannerData } from "@/components/InteractiveHeroBanner";
 import { generateThemeCssVariables } from "./themeColors";
+import { mergeHomeConfig } from "./homeConfig";
 
 export interface UseStorefrontStateProps {
   tenant: TenantInfo | null;
@@ -32,6 +33,7 @@ export function useStorefrontState({
 
   // Variáveis CSS calculadas para injeção inline no container raiz (zero FOUC)
   const cssVariables = useMemo(() => generateThemeCssVariables(tenant), [tenant]);
+  const homeConfig = useMemo(() => mergeHomeConfig(tenant, bannerData), [tenant, bannerData]);
 
   // Atualiza contagem do carrinho via localStorage e evento global
   const updateCartCount = () => {
@@ -184,6 +186,7 @@ export function useStorefrontState({
     storeName,
     whatsapp,
     cssVariables,
+    homeConfig,
     // Busca & Categorias
     searchQuery,
     setSearchQuery,

@@ -28,6 +28,7 @@ class TenantUpdate(BaseModel):
     primary_color: Optional[str] = None
     secondary_color: Optional[str] = None
     logo_url: Optional[str] = None
+    home_config: Optional[Dict[str, Any]] = None
     settings_json: Optional[Dict[str, Any]] = None
 
 
@@ -40,6 +41,7 @@ class TenantPublic(BaseModel):
     primary_color: str
     secondary_color: str
     logo_url: Optional[str] = None
+    home_config: Optional[Dict[str, Any]] = None
     settings_json: Dict[str, Any]
     is_active: bool
 

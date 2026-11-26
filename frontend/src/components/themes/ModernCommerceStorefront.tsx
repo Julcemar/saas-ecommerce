@@ -7,6 +7,14 @@ import { useStorefrontState } from "@/lib/useStorefrontState";
 import InteractiveHeroBanner from "@/components/InteractiveHeroBanner";
 import CartDrawer from "@/components/CartDrawer";
 import {
+  StorefrontTopBar,
+  StorefrontHero,
+  StorefrontBenefitsBar,
+  StorefrontHowItWorks,
+  StorefrontBottomCta,
+  StorefrontFooter,
+} from "@/components/storefront/StorefrontHomeSections";
+import {
   FiSearch,
   FiUser,
   FiShoppingCart,
@@ -50,37 +58,8 @@ export default function ModernCommerceStorefront({
       style={state.cssVariables}
       className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 font-sans selection:bg-[var(--color-primary)] selection:text-white"
     >
-      {/* 1. TOP BAR DE ALTA CONVERSÃO */}
-      <div
-        style={{
-          backgroundColor: "var(--color-primary)",
-          color: "var(--color-primary-foreground)",
-        }}
-        className="text-[11px] font-medium py-1.5 px-4 shadow-xs"
-      >
-        <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
-          <div className="flex items-center gap-2">
-            <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
-              Frete & Atacado
-            </span>
-            <span>Descontos progressivos automáticos por quantidade no carrinho!</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <a
-              href={`https://wa.me/${state.whatsapp}?text=Olá,%20gostaria%20de%20tirar%20dúvidas%20sobre%20um%20pedido.`}
-              target="_blank"
-              rel="noreferrer"
-              className="hover:underline flex items-center gap-1 font-semibold"
-            >
-              Suporte WhatsApp
-            </a>
-            <span className="opacity-40">|</span>
-            <Link href="/admin" className="hover:underline opacity-90">
-              Painel do Lojista
-            </Link>
-          </div>
-        </div>
-      </div>
+      {/* 1. TOP BAR DINÂMICA */}
+      <StorefrontTopBar config={state.homeConfig} theme="modern_commerce" />
 
       {/* 2. HEADER ESTRUTURADO MODERNO */}
       <header className="bg-white border-b border-slate-200/80 sticky top-0 z-40 shadow-xs">
@@ -91,7 +70,8 @@ export default function ModernCommerceStorefront({
               <img
                 src={tenant.logo_url}
                 alt={state.storeName}
-                className="h-11 sm:h-12 md:h-14 w-auto max-w-[220px] sm:max-w-[260px] object-contain transition-all"
+                style={{ maxHeight: `${state.homeConfig.header.logoMaxHeightPx}px` }}
+                className="w-auto max-w-[220px] sm:max-w-[260px] object-contain transition-all"
               />
             ) : (
               <div className="flex items-center gap-2">
@@ -115,7 +95,7 @@ export default function ModernCommerceStorefront({
           <div className="hidden md:flex flex-1 max-w-lg items-center relative">
             <input
               type="text"
-              placeholder="Buscar canecas, camisetas, squeezes corporativos..."
+              placeholder={state.homeConfig.header.searchPlaceholder}
               value={state.searchQuery}
               onChange={(e) => state.setSearchQuery(e.target.value)}
               className="w-full pl-4 pr-11 py-2.5 text-xs bg-slate-50 border border-slate-300/80 rounded-xl focus:outline-none focus:bg-white focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all placeholder:text-slate-400"
@@ -224,55 +204,11 @@ export default function ModernCommerceStorefront({
         </div>
       </header>
 
-      {/* 4. HERO BANNER LARGURA TOTAL (FULL-WIDTH) */}
-      <div className="w-full">
-        <InteractiveHeroBanner banner={state.bannerData} />
-      </div>
+      {/* 4. HERO BANNER DINÂMICO */}
+      <StorefrontHero config={state.homeConfig} bannerData={state.bannerData} whatsapp={state.whatsapp} />
 
-      {/* 5. BARRA DE BENEFÍCIOS ESTRUTURADA */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-              <FiZap className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-900 leading-tight">Produção Ágil</h4>
-              <p className="text-[11px] text-slate-500 mt-0.5">Despacho em até 48h úteis</p>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-              <FiPercent className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-900 leading-tight">Desconto no Atacado</h4>
-              <p className="text-[11px] text-slate-500 mt-0.5">Tabela progressiva no carrinho</p>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-              <FiTruck className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-900 leading-tight">Entrega Garantida</h4>
-              <p className="text-[11px] text-slate-500 mt-0.5">Sedex, PAC e Jadlog</p>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-              <FiShield className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-xs font-bold text-slate-900 leading-tight">Prévia Digital Grátis</h4>
-              <p className="text-[11px] text-slate-500 mt-0.5">Você aprova antes da gravação</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 5. BARRA DE BENEFÍCIOS DINÂMICA */}
+      <StorefrontBenefitsBar config={state.homeConfig} theme="modern_commerce" />
 
       {/* 6. CATEGORIAS COM THUMBNAILS CIRCULARES E SCROLL SUAVE (SEM SCROLLBAR FEIA) */}
       {state.categories && state.categories.length > 0 && (
@@ -500,147 +436,18 @@ export default function ModernCommerceStorefront({
         )}
       </section>
 
-      {/* 8. SEÇÃO: PROCESSO DE COMPRA E PERSONALIZAÇÃO */}
-      <section className="bg-white border-y border-slate-200/80 py-12 px-4 sm:px-6 my-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-lg mx-auto mb-10">
-            <h3 className="font-heading text-xl font-bold text-slate-900">Passo a passo simplificado</h3>
-            <p className="text-xs text-slate-500 mt-1">Veja como seu pedido é produzido com máxima fidelidade</p>
-          </div>
+      {/* 8. SEÇÃO: PASSO A PASSO SIMPLIFICADO */}
+      <StorefrontHowItWorks config={state.homeConfig} theme="modern_commerce" />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2">
-              <span className="w-7 h-7 rounded-lg bg-[var(--color-primary)] text-[var(--color-primary-foreground)] text-xs font-bold flex items-center justify-center">
-                1
-              </span>
-              <h4 className="text-xs font-bold text-slate-900">Seleção no Catálogo</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Adicione ao carrinho as quantidades necessárias com desconto progressivo.
-              </p>
-            </div>
+      {/* 9. CTA CORPORATIVO / FECHAMENTO */}
+      <StorefrontBottomCta config={state.homeConfig} whatsapp={state.whatsapp} />
 
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2">
-              <span className="w-7 h-7 rounded-lg bg-[var(--color-primary)] text-[var(--color-primary-foreground)] text-xs font-bold flex items-center justify-center">
-                2
-              </span>
-              <h4 className="text-xs font-bold text-slate-900">Envio da Sua Marca</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Faça o upload do seu vetor (PDF, EPS, PNG) ou informe as frases desejadas.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2">
-              <span className="w-7 h-7 rounded-lg bg-[var(--color-primary)] text-[var(--color-primary-foreground)] text-xs font-bold flex items-center justify-center">
-                3
-              </span>
-              <h4 className="text-xs font-bold text-slate-900">Validação da Arte</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Apresentamos uma prévia virtual para sua autorização antes de iniciar.
-              </p>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2">
-              <span className="w-7 h-7 rounded-lg bg-[var(--color-primary)] text-[var(--color-primary-foreground)] text-xs font-bold flex items-center justify-center">
-                4
-              </span>
-              <h4 className="text-xs font-bold text-slate-900">Despacho Rastreado</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Embalagem cuidadosa e transporte ágil com código de rastreamento.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 9. CTA B2B DE ALTA CONVERSÃO */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full mb-8">
-        <div
-          style={{
-            backgroundColor: "var(--color-primary)",
-            color: "var(--color-primary-foreground)",
-          }}
-          className="p-8 sm:p-10 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-6"
-        >
-          <div className="space-y-2 max-w-xl">
-            <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-white/20 uppercase tracking-wider inline-block">
-              Vendas Corporativas & Tiragens Especiais
-            </span>
-            <h3 className="font-heading text-xl sm:text-2xl font-bold leading-tight">
-              Precisa de orçamento corporativo faturado para sua empresa?
-            </h3>
-            <p className="text-xs opacity-90 leading-relaxed">
-              Atendemos campanhas de endomarketing, brindes de fim de ano e eventos corporativos com condições exclusivas no atacado.
-            </p>
-          </div>
-
-          <a
-            href={`https://wa.me/${state.whatsapp}?text=Olá,%20gostaria%20de%20um%20orçamento%20B2B%20faturado.`}
-            target="_blank"
-            rel="noreferrer"
-            className="px-6 py-3.5 rounded-xl bg-white text-slate-900 hover:bg-slate-50 font-bold text-xs uppercase shadow-sm shrink-0 transition-all flex items-center gap-2"
-          >
-            <FiMessageSquare className="w-4 h-4 text-[var(--color-primary)]" />
-            <span>Solicitar Cotação B2B</span>
-          </a>
-        </div>
-      </section>
-
-      {/* 10. RODAPÉ COMPLETO & MODERNO */}
-      <footer className="bg-white border-t border-slate-200 mt-auto text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="space-y-3">
-            <span className="font-heading text-sm font-bold text-slate-900 uppercase">
-              {state.storeName}
-            </span>
-            <p className="text-[11px] text-slate-500 leading-relaxed">
-              Soluções completas em personalização e presentes corporativos de alto padrão com despacho para todo o Brasil.
-            </p>
-            <div className="text-[10px] text-slate-400">
-              CNPJ Ativo • Atendimento Direto
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-heading text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">
-              Catálogo
-            </h4>
-            <ul className="space-y-1.5 text-[11px]">
-              <li><a href="#catalogo" className="hover:text-[var(--color-primary)]">Mais Vendidos</a></li>
-              <li><Link href="/carrinho" className="hover:text-[var(--color-primary)]">Carrinho de Compras</Link></li>
-              <li><Link href="/admin" className="hover:text-[var(--color-primary)]">Área Administrativa</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-heading text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">
-              Canais de Contato
-            </h4>
-            <ul className="space-y-1.5 text-[11px]">
-              <li>WhatsApp: (41) 99709-8905</li>
-              <li>Horário: 08h às 18h (Seg. a Sex.)</li>
-              <li>Curitiba - PR • Envio Nacional</li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-heading text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">
-              Formas de Pagamento
-            </h4>
-            <div className="space-y-1.5 text-[11px] text-slate-600">
-              <div className="flex items-center gap-1.5 text-emerald-600 font-semibold">
-                <FiCheck className="w-3.5 h-3.5" />
-                <span>Pix Instantâneo D+0</span>
-              </div>
-              <div>Cartões de Crédito em até 12x</div>
-              <div>Faturamento 28D para Empresas (sob consulta)</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-slate-100 py-4 text-center text-[10px] text-slate-400">
-          © 2026 {state.storeName}. Todos os direitos reservados.
-        </div>
-      </footer>
+      {/* 10. RODAPÉ DINÂMICO */}
+      <StorefrontFooter
+        config={state.homeConfig}
+        storeName={state.storeName}
+        logoUrl={tenant?.logo_url}
+      />
 
       {/* GAVETA DO CARRINHO */}
       <CartDrawer

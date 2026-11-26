@@ -64,6 +64,9 @@ async def _ensure_sqlite_columns(conn) -> None:
             ("seo_title", "VARCHAR(70)"),
             ("seo_description", "VARCHAR(160)"),
         ],
+        "tenants": [
+            ("home_config", "JSON DEFAULT '{}'"),
+        ],
         "products": [
             ("images_json", "JSON NOT NULL DEFAULT '[]'"),
             ("status", "VARCHAR(20) NOT NULL DEFAULT 'ACTIVE'"),
@@ -117,6 +120,7 @@ async def init_db_resilient():
             await conn.run_sync(Base.metadata.create_all)
             if conn.dialect.name == "postgresql":
                 migrations = [
+                    "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS home_config JSONB DEFAULT '{}'::jsonb;",
                     "ALTER TABLE storefront_banners ADD COLUMN IF NOT EXISTS config_json JSONB DEFAULT '{}'::jsonb;",
                     "ALTER TABLE categories ADD COLUMN IF NOT EXISTS seo_title VARCHAR(70);",
                     "ALTER TABLE categories ADD COLUMN IF NOT EXISTS seo_description VARCHAR(160);",

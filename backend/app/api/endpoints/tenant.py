@@ -62,7 +62,9 @@ async def update_tenant_settings(
     if payload.secondary_color is not None:
         tenant.secondary_color = payload.secondary_color
     if payload.logo_url is not None:
-        tenant.logo_url = payload.logo_url
+        tenant.logo_url = payload.logo_url if payload.logo_url != "" else None
+    if payload.home_config is not None:
+        tenant.home_config = payload.home_config
     if payload.settings_json is not None:
         tenant.settings_json = {**tenant.settings_json, **payload.settings_json}
 

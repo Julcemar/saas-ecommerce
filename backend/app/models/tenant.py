@@ -17,6 +17,7 @@ class Tenant(Base):
     primary_color = Column(String(20), nullable=False, default="#0052B4")
     secondary_color = Column(String(20), nullable=False, default="#FFD100")
     logo_url = Column(Text, nullable=True)
+    home_config = Column(JSON_TYPE, nullable=True, default=dict)
     settings_json = Column(JSON_TYPE, nullable=False, default={
         "currency": "BRL",
         "tax_rate": 0,

@@ -9,6 +9,7 @@ export interface TenantInfo {
   primary_color: string;
   secondary_color: string;
   logo_url?: string | null;
+  home_config?: Record<string, any> | null;
   settings_json: {
     currency?: string;
     whatsapp_phone?: string;

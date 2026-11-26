@@ -9,7 +9,7 @@ from app.middleware.tenant import get_optional_tenant
 
 router = APIRouter(prefix="/uploads", tags=["Uploads & Mídia"])
 
-ALLOWED_FOLDERS = {"products", "categories", "banners", "logos", "orders", "custom_uploads", "general", "artwork"}
+ALLOWED_FOLDERS = {"products", "categories", "banners", "logos", "appearance", "orders", "custom_uploads", "general", "artwork"}
 ALLOWED_EXTS = {"png", "jpg", "jpeg", "svg", "pdf", "webp", "ai", "cdr"}
 
 
