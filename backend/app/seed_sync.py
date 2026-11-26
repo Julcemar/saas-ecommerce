@@ -2,7 +2,7 @@ import json
 import logging
 import shutil
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -39,14 +39,15 @@ def _parse_dt(val: Any) -> Optional[datetime]:
     if val is None or val == "":
         return None
     if isinstance(val, datetime):
-        return val
+        return val if val.tzinfo is not None else val.replace(tzinfo=timezone.utc)
     s = str(val).strip()
     if s.endswith("Z"):
         s = s[:-1] + "+00:00"
     try:
-        return datetime.fromisoformat(s)
+        dt = datetime.fromisoformat(s)
+        return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
     except ValueError:
-        return datetime.utcnow()
+        return datetime.now(timezone.utc)
 
 
 def _parse_json(val: Any, default: Any) -> Any:
@@ -360,23 +361,28 @@ async def sync_seed_data() -> None:
         return
 
     async with AsyncSessionLocal() as db:
-        try:
-            counts = {
-                "tenants": await _sync_tenants(db, snapshot.get("tenants", [])),
-                "users": await _sync_users(db, snapshot.get("users", [])),
-                "categories": await _sync_categories(db, snapshot.get("categories", [])),
-                "products": await _sync_products(db, snapshot.get("products", [])),
-                "product_variants": await _sync_variants(db, snapshot.get("product_variants", [])),
-                "product_wholesale_tiers": await _sync_wholesale_tiers(db, snapshot.get("product_wholesale_tiers", [])),
-                "storefront_banners": await _sync_banners(db, snapshot.get("storefront_banners", [])),
-                "tenant_integrations": await _sync_integrations(db, snapshot.get("tenant_integrations", [])),
-            }
-            await db.commit()
-            total_inserted = sum(counts.values())
-            if total_inserted > 0:
-                logger.info(f"[SeedSync] Sincronização concluída: {counts}")
-            else:
-                logger.info("[SeedSync] Banco já sincronizado (nenhum registro novo pendente).")
-        except Exception as e:
-            await db.rollback()
-            logger.error(f"[SeedSync] Falha ao sincronizar snapshot no banco: {e}")
+        steps = [
+            ("tenants", _sync_tenants),
+            ("users", _sync_users),
+            ("categories", _sync_categories),
+            ("products", _sync_products),
+            ("product_variants", _sync_variants),
+            ("product_wholesale_tiers", _sync_wholesale_tiers),
+            ("storefront_banners", _sync_banners),
+            ("tenant_integrations", _sync_integrations),
+        ]
+        counts = {}
+        for table_name, sync_fn in steps:
+            try:
+                counts[table_name] = await sync_fn(db, snapshot.get(table_name, []))
+                await db.commit()
+            except Exception as e:
+                await db.rollback()
+                logger.exception(f"[SeedSync] Falha ao sincronizar tabela '{table_name}': {e}")
+                counts[table_name] = 0
+
+        total_inserted = sum(counts.values())
+        if total_inserted > 0:
+            logger.info(f"[SeedSync] Sincronização concluída: {counts}")
+        else:
+            logger.info("[SeedSync] Banco já sincronizado (nenhum registro novo pendente).")

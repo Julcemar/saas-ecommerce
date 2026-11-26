@@ -1,5 +1,6 @@
 import os
 import logging
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import declarative_base
 from app.config import settings
@@ -62,6 +63,13 @@ async def init_db_resilient():
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+            if conn.dialect.name == "postgresql":
+                await conn.execute(
+                    text(
+                        "ALTER TABLE storefront_banners "
+                        "ADD COLUMN IF NOT EXISTS config_json JSONB DEFAULT '{}'::jsonb;"
+                    )
+                )
         logger.info(f"Banco de dados inicializado com sucesso ({engine.url.drivername}).")
     except Exception as e:
         logger.warning(f"Não foi possível conectar ao PostgreSQL ({e}).")
