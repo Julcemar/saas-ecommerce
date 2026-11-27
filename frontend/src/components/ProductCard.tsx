@@ -35,7 +35,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               backgroundColor: "var(--brand-secondary)",
               color: "var(--brand-text-on-secondary)",
             }}
-            className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-xs"
+            className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-sm"
           >
             {product.badge_label}
           </span>

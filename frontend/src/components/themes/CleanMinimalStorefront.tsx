@@ -46,6 +46,8 @@ export default function CleanMinimalStorefront({
 
   return (
     <div
+      data-ui-version="modern-v2"
+      data-theme-variant="clean_minimal"
       style={state.cssVariables}
       className="min-h-screen flex flex-col bg-[var(--brand-bg,#FAFAFA)] text-neutral-900 font-sans selection:bg-[var(--brand-primary)] selection:text-[var(--brand-text-on-primary)]"
     >
@@ -199,8 +201,8 @@ export default function CleanMinimalStorefront({
                   onClick={() => state.setSelectedCategory(isSelected ? null : cat.slug)}
                   className={`p-3 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2 ${
                     isSelected
-                      ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 shadow-xs"
-                      : "border-neutral-200/60 bg-white hover:border-neutral-300 hover:shadow-xs"
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5 shadow-sm"
+                      : "border-neutral-200/60 bg-white hover:border-neutral-300 hover:shadow-sm"
                   }`}
                 >
                   <div className="w-12 h-12 rounded-xl bg-neutral-100 flex items-center justify-center overflow-hidden">
@@ -264,7 +266,7 @@ export default function CleanMinimalStorefront({
               return (
                 <div
                   key={prod.id}
-                  className="storefront-card-interactive group rounded-2xl border border-neutral-200/70 overflow-hidden shadow-2xs flex flex-col justify-between"
+                  className="storefront-card-interactive group rounded-2xl border border-neutral-200/70 overflow-hidden shadow-sm flex flex-col justify-between"
                 >
                   <div>
                     {/* Imagem Protagonista aspect-square */}
@@ -288,7 +290,7 @@ export default function CleanMinimalStorefront({
                             backgroundColor: "var(--brand-secondary)",
                             color: "var(--brand-text-on-secondary)",
                           }}
-                          className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-xs"
+                          className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-sm"
                         >
                           {prod.badge_label}
                         </span>
@@ -345,7 +347,7 @@ export default function CleanMinimalStorefront({
             <button
               type="button"
               onClick={state.loadMore}
-              className="px-6 py-2.5 rounded-full bg-white border border-neutral-300 text-xs font-semibold text-neutral-800 hover:bg-neutral-50 hover:border-neutral-400 shadow-xs transition-all inline-flex items-center gap-2 cursor-pointer"
+              className="px-6 py-2.5 rounded-full bg-white border border-neutral-300 text-xs font-semibold text-neutral-800 hover:bg-neutral-50 hover:border-neutral-400 shadow-sm transition-all inline-flex items-center gap-2 cursor-pointer"
             >
               <span>Carregar mais produtos (+12)</span>
               <FiArrowRight className="w-3.5 h-3.5" />

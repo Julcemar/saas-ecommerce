@@ -252,7 +252,7 @@ export default function StorefrontShell({
               backgroundColor: "var(--color-primary)",
               color: "var(--color-primary-foreground)",
             }}
-            className="text-[11px] font-medium py-1.5 px-4 shadow-xs"
+            className="text-[11px] font-medium py-1.5 px-4 shadow-sm"
           >
             <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
               <div className="flex items-center gap-2">
@@ -325,7 +325,7 @@ export default function StorefrontShell({
                     backgroundColor: "var(--color-primary)",
                     color: "var(--color-primary-foreground)",
                   }}
-                  className="flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-full shadow-xs hover:opacity-95 active:scale-98 transition-all cursor-pointer"
+                  className="flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-full shadow-sm hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer"
                   title="Abrir carrinho"
                 >
                   <FiShoppingCart className="w-3.5 h-3.5" />
@@ -443,7 +443,7 @@ export default function StorefrontShell({
       case "modern_commerce":
       default:
         return (
-          <header className="storefront-glass-header border-b border-slate-200/80 sticky top-0 z-40 shadow-xs">
+          <header className="storefront-glass-header border-b border-slate-200/80 sticky top-0 z-40 shadow-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4 sm:gap-8">
               <Link href="/" className="flex items-center gap-2 shrink-0 group py-0.5">
                 {tenant?.logo_url ? (
@@ -459,7 +459,7 @@ export default function StorefrontShell({
                         backgroundColor: "var(--color-primary)",
                         color: "var(--color-primary-foreground)",
                       }}
-                      className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shadow-xs"
+                      className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shadow-sm"
                     >
                       <FiZap className="w-4 h-4" />
                     </div>
@@ -496,7 +496,7 @@ export default function StorefrontShell({
                     backgroundColor: "var(--color-primary)",
                     color: "var(--color-primary-foreground)",
                   }}
-                  className="flex items-center gap-2.5 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm hover:opacity-95 active:scale-98 transition-all cursor-pointer"
+                  className="flex items-center gap-2.5 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm hover:opacity-95 active:scale-[0.98] transition-all cursor-pointer"
                   title="Abrir carrinho"
                 >
                   <div className="relative">
@@ -732,8 +732,9 @@ export default function StorefrontShell({
 
   return (
     <div
+      data-ui-version="modern-v2"
       style={cssVariables}
-      className={`min-h-screen flex flex-col ${classes.wrapperBg} ${classes.wrapperText} selection:bg-[var(--color-primary)] selection:text-white`}
+      className={`min-h-screen flex flex-col ${classes.wrapperBg} ${classes.wrapperText} selection:bg-[var(--brand-primary)] selection:text-[var(--brand-text-on-primary)]`}
     >
       {/* 1. TOPBAR */}
       {renderTopBar()}

@@ -44,6 +44,8 @@ export default function EditorialStudioStorefront({
 
   return (
     <div
+      data-ui-version="modern-v2"
+      data-theme-variant="editorial_studio"
       style={state.cssVariables}
       className="min-h-screen flex flex-col bg-[var(--brand-bg,#FCFCFD)] text-neutral-900 font-sans selection:bg-[var(--brand-primary)] selection:text-[var(--brand-text-on-primary)]"
     >
@@ -201,7 +203,7 @@ export default function EditorialStudioStorefront({
                   onClick={() => state.setSelectedCategory(isSelected ? null : cat.slug)}
                   className={`group p-3 rounded-xl border text-left transition-all cursor-pointer ${
                     isSelected
-                      ? "border-neutral-900 bg-neutral-900 text-white shadow-xs"
+                      ? "border-neutral-900 bg-neutral-900 text-white shadow-sm"
                       : "border-neutral-200 bg-white hover:border-neutral-400"
                   }`}
                 >
@@ -291,7 +293,7 @@ export default function EditorialStudioStorefront({
                             backgroundColor: "var(--brand-secondary)",
                             color: "var(--brand-text-on-secondary)",
                           }}
-                          className="absolute top-3 left-3 px-2.5 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase shadow-xs"
+                          className="absolute top-3 left-3 px-2.5 py-0.5 rounded text-[9px] font-bold tracking-widest uppercase shadow-sm"
                         >
                           {prod.badge_label}
                         </span>
@@ -348,7 +350,7 @@ export default function EditorialStudioStorefront({
             <button
               type="button"
               onClick={state.loadMore}
-              className="px-8 py-3 rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 text-xs font-bold tracking-wider uppercase shadow-xs transition-all inline-flex items-center gap-2 cursor-pointer"
+              className="px-8 py-3 rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 text-xs font-bold tracking-wider uppercase shadow-sm transition-all inline-flex items-center gap-2 cursor-pointer"
             >
               <span>Ver mais produtos (+12)</span>
               <FiArrowRight className="w-3.5 h-3.5" />

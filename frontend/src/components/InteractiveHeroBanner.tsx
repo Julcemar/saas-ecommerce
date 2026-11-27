@@ -183,7 +183,7 @@ export default function InteractiveHeroBanner({
                 className={
                   isNeoBrutalist
                     ? "text-[11px] font-black uppercase px-3 py-1 rounded-full border-2 border-black shadow-[2px_2px_0px_#000] inline-flex items-center gap-1"
-                    : "text-[11px] font-bold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-xs inline-flex items-center gap-1.5"
+                    : "text-[11px] font-bold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-sm inline-flex items-center gap-1.5"
                 }
                 style={{ backgroundColor: badge1Bg, color: badge1Color }}
               >
@@ -238,7 +238,7 @@ export default function InteractiveHeroBanner({
                     ? "storefront-cta-btn font-heading font-semibold text-xs sm:text-sm py-3.5 px-7 rounded-full inline-flex items-center gap-2"
                     : isEditorial
                     ? "font-heading font-bold text-xs sm:text-sm py-3.5 px-7 rounded-lg tracking-wider uppercase shadow-lg hover:-translate-y-0.5 transition-all inline-flex items-center gap-2"
-                    : "font-heading font-bold text-xs sm:text-sm py-3.5 px-7 rounded-xl shadow-lg hover:-translate-y-0.5 hover:brightness-105 active:scale-98 transition-all inline-flex items-center gap-2"
+                    : "font-heading font-bold text-xs sm:text-sm py-3.5 px-7 rounded-xl shadow-lg hover:-translate-y-0.5 hover:brightness-105 active:scale-[0.98] transition-all inline-flex items-center gap-2"
                 }
                 style={
                   isClean

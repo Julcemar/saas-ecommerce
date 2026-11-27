@@ -62,7 +62,7 @@ export function StorefrontTopBar({
       ? "border-b text-[11px] text-neutral-600 py-2 px-4 backdrop-blur-md"
       : tb.useThemePrimary && theme === "editorial_studio"
       ? "bg-neutral-950 text-neutral-200 text-[11px] py-2 px-4 sm:px-8 tracking-wider"
-      : "text-[11px] font-medium py-1.5 px-4 shadow-xs";
+      : "text-[11px] font-medium py-1.5 px-4 shadow-sm";
 
   return (
     <div style={customStyle} className={wrapperClass}>
@@ -208,10 +208,10 @@ export function StorefrontBenefitsBar({
               key={idx}
               className={`storefront-card-interactive p-4 flex items-center gap-3.5 ${
                 theme === "clean_minimal"
-                  ? "rounded-2xl border border-neutral-200/70 shadow-2xs"
+                  ? "rounded-2xl border border-neutral-200/70 shadow-sm"
                   : theme === "editorial_studio"
                   ? "border border-neutral-200/90 rounded-lg"
-                  : "rounded-2xl border border-slate-200/80 shadow-2xs"
+                  : "rounded-2xl border border-slate-200/80 shadow-sm"
               }`}
             >
               <div
@@ -295,7 +295,7 @@ export function StorefrontHowItWorks({
                     background: "var(--brand-cta-gradient, var(--brand-primary))",
                     color: "var(--brand-text-on-primary, #FFFFFF)",
                   }}
-                  className="w-8 h-8 rounded-xl text-xs font-extrabold flex items-center justify-center shadow-xs"
+                  className="w-8 h-8 rounded-xl text-xs font-extrabold flex items-center justify-center shadow-sm"
                 >
                   {st.number}
                 </span>

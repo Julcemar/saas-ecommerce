@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -7,7 +9,7 @@ import CleanMinimalStorefront from "@/components/themes/CleanMinimalStorefront";
 import ModernCommerceStorefront from "@/components/themes/ModernCommerceStorefront";
 import EditorialStudioStorefront from "@/components/themes/EditorialStudioStorefront";
 import { TenantInfo, ProductItem, fetchApi } from "@/lib/api";
-import { getContrastColor } from "@/lib/themeColors";
+import { generateThemeCssVariables } from "@/lib/themeColors";
 import {
   FiLayers,
   FiArrowRight,
@@ -50,20 +52,10 @@ export default function HomePage() {
           const tenantData = await tenantRes.json();
           setTenant(tenantData);
 
-          if (tenantData.primary_color) {
-            document.documentElement.style.setProperty("--color-primary", tenantData.primary_color);
-            document.documentElement.style.setProperty(
-              "--color-primary-foreground",
-              getContrastColor(tenantData.primary_color)
-            );
-          }
-          if (tenantData.secondary_color) {
-            document.documentElement.style.setProperty("--color-secondary", tenantData.secondary_color);
-            document.documentElement.style.setProperty(
-              "--color-secondary-foreground",
-              getContrastColor(tenantData.secondary_color)
-            );
-          }
+          const brandVars = generateThemeCssVariables(tenantData) as Record<string, string>;
+          Object.entries(brandVars).forEach(([key, value]) => {
+            document.documentElement.style.setProperty(key, value);
+          });
 
           const [prodRes, catRes] = await Promise.all([
             fetchApi("/products"),

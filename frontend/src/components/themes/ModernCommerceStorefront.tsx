@@ -56,6 +56,8 @@ export default function ModernCommerceStorefront({
 
   return (
     <div
+      data-ui-version="modern-v2"
+      data-theme-variant="modern_commerce"
       style={state.cssVariables}
       className="min-h-screen flex flex-col bg-[var(--brand-bg,#F8FAFC)] text-slate-900 font-sans selection:bg-[var(--brand-primary)] selection:text-[var(--brand-text-on-primary)]"
     >
@@ -63,7 +65,7 @@ export default function ModernCommerceStorefront({
       <StorefrontTopBar config={state.homeConfig} theme="modern_commerce" />
 
       {/* 2. HEADER ESTRUTURADO MODERNO COM GLASSMORPHISM */}
-      <header className="storefront-glass-header border-b border-slate-200/75 sticky top-0 z-40 shadow-xs">
+      <header className="storefront-glass-header border-b border-slate-200/75 sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4 sm:gap-8">
           {/* Logo da Loja */}
           <Link href="/" className="flex items-center gap-2 shrink-0 group py-0.5">
@@ -81,7 +83,7 @@ export default function ModernCommerceStorefront({
                     backgroundColor: "var(--color-primary)",
                     color: "var(--color-primary-foreground)",
                   }}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shadow-xs"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm shadow-sm"
                 >
                   <FiZap className="w-4 h-4" />
                 </div>
@@ -127,7 +129,7 @@ export default function ModernCommerceStorefront({
                       backgroundColor: "var(--brand-secondary)",
                       color: "var(--brand-text-on-secondary)",
                     }}
-                    className="absolute -top-1.5 -right-2 text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-xs"
+                    className="absolute -top-1.5 -right-2 text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-sm"
                   >
                     {state.cartCount}
                   </span>
@@ -232,7 +234,7 @@ export default function ModernCommerceStorefront({
                 <button
                   type="button"
                   onClick={() => scrollCategories("left")}
-                  className="w-7 h-7 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 flex items-center justify-center shadow-2xs transition-all active:scale-95 cursor-pointer"
+                  className="w-7 h-7 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 flex items-center justify-center shadow-sm transition-all active:scale-95 cursor-pointer"
                   title="Rolar categorias para a esquerda"
                   aria-label="Rolar para esquerda"
                 >
@@ -241,7 +243,7 @@ export default function ModernCommerceStorefront({
                 <button
                   type="button"
                   onClick={() => scrollCategories("right")}
-                  className="w-7 h-7 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 flex items-center justify-center shadow-2xs transition-all active:scale-95 cursor-pointer"
+                  className="w-7 h-7 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 flex items-center justify-center shadow-sm transition-all active:scale-95 cursor-pointer"
                   title="Rolar categorias para a direita"
                   aria-label="Rolar para direita"
                 >
@@ -268,8 +270,8 @@ export default function ModernCommerceStorefront({
                   onClick={() => state.setSelectedCategory(isSelected ? null : cat.slug)}
                   className={`flex items-center gap-2.5 px-4 py-2 rounded-full border shrink-0 transition-all cursor-pointer ${
                     isSelected
-                      ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-primary-foreground)] shadow-xs"
-                      : "border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-xs text-slate-700"
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-primary-foreground)] shadow-sm"
+                      : "border-slate-200/90 bg-white hover:border-slate-300 hover:shadow-sm text-slate-700"
                   }`}
                 >
                   <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden shrink-0 border border-slate-200/60">
@@ -330,7 +332,7 @@ export default function ModernCommerceStorefront({
               return (
                 <div
                   key={prod.id}
-                  className="storefront-card-interactive group rounded-2xl border border-slate-200/80 overflow-hidden shadow-2xs flex flex-col justify-between"
+                  className="storefront-card-interactive group rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:-translate-y-1 flex flex-col justify-between"
                 >
                   <div>
                     {/* Imagem em aspect-square no topo do card */}
@@ -354,7 +356,7 @@ export default function ModernCommerceStorefront({
                             backgroundColor: "var(--brand-secondary)",
                             color: "var(--brand-text-on-secondary)",
                           }}
-                          className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-xs"
+                          className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-sm"
                         >
                           {prod.badge_label}
                         </span>
@@ -432,7 +434,7 @@ export default function ModernCommerceStorefront({
             <button
               type="button"
               onClick={state.loadMore}
-              className="px-8 py-3 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:border-slate-400 shadow-2xs transition-all inline-flex items-center gap-2 cursor-pointer"
+              className="px-8 py-3 rounded-xl bg-white border border-slate-300 text-xs font-bold text-slate-800 hover:bg-slate-50 hover:border-slate-400 shadow-sm transition-all inline-flex items-center gap-2 cursor-pointer"
             >
               <span>Carregar mais produtos (+12)</span>
               <FiArrowRight className="w-4 h-4 text-[var(--color-primary)]" />
