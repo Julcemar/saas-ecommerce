@@ -32,6 +32,12 @@ export function getActiveTheme(tenant: TenantInfo | null): StorefrontTheme {
       return "neo_brutalist";
     }
 
+    const tenantTheme = (tenant?.settings_json as any)?.theme;
+    if (tenantTheme === "clean_minimal" || tenantTheme === "clean-minimal") return "clean_minimal";
+    if (tenantTheme === "editorial_studio" || tenantTheme === "editorial-studio") return "editorial_studio";
+    if (tenantTheme === "neo_brutalist" || tenantTheme === "neo-brutalist") return "neo_brutalist";
+    if (tenantTheme === "modern_commerce" || tenantTheme === "modern-commerce") return "modern_commerce";
+
     const stored = localStorage.getItem("active_theme");
     if (stored === "clean_minimal" || stored === "editorial_studio" || stored === "neo_brutalist" || stored === "modern_commerce") {
       return stored as StorefrontTheme;

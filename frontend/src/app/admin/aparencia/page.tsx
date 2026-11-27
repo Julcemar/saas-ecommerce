@@ -346,10 +346,23 @@ export default function AparenciaPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Erro ao salvar tema da loja.");
+      if (!res.ok) {
+        let errDetail = "Erro ao salvar tema da loja.";
+        try {
+          const errData = await res.json();
+          if (errData?.detail) errDetail = errData.detail;
+        } catch {}
+        if (res.status === 401) {
+          throw new Error("Sua sessão de administrador expirou. Faça login novamente em /admin/login.");
+        }
+        throw new Error(errDetail);
+      }
 
       const updated = await res.json();
       setTenant(updated);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("active_theme", selectedTheme);
+      }
       setSuccessMsg("Tema visual, logotipo e paleta da loja atualizados com sucesso!");
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {

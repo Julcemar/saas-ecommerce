@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm.attributes import flag_modified
 from typing import Dict, Any
 from app.database import get_db
 from app.models.tenant import Tenant
@@ -65,8 +66,10 @@ async def update_tenant_settings(
         tenant.logo_url = payload.logo_url if payload.logo_url != "" else None
     if payload.home_config is not None:
         tenant.home_config = payload.home_config
+        flag_modified(tenant, "home_config")
     if payload.settings_json is not None:
-        tenant.settings_json = {**tenant.settings_json, **payload.settings_json}
+        tenant.settings_json = {**(tenant.settings_json or {}), **payload.settings_json}
+        flag_modified(tenant, "settings_json")
 
     await db.commit()
     await db.refresh(tenant)
