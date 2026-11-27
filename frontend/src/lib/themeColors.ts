@@ -2,44 +2,56 @@ import { CSSProperties } from "react";
 import { TenantInfo } from "./api";
 
 /**
- * Calcula a cor de contraste ideal (Branco ou Cinza Escuro quase preto)
- * com base na luminância relativa W3C para garantir legibilidade perfeita
- * em botões e badges, mesmo com cores claras escolhidas pelo lojista.
+ * Calcula a cor de contraste ideal (#FFFFFF ou #0F172A) com base na luminância
+ * relativa WCAG 2.1 (linearização sRGB) para garantir legibilidade em qualquer
+ * paleta escolhida pelo lojista no painel administrativo.
  */
-export function getContrastColor(hexColor?: string | null): "#FFFFFF" | "#111827" {
+export function getContrastColor(hexColor?: string | null): "#FFFFFF" | "#0F172A" {
   if (!hexColor) return "#FFFFFF";
 
   let hex = hexColor.trim().replace(/^#/, "");
-
-  // Expande shorthand (#FFF -> #FFFFFF)
   if (hex.length === 3) {
     hex = hex.split("").map((c) => c + c).join("");
   }
-
   if (hex.length !== 6) return "#FFFFFF";
 
-  const r = parseInt(hex.substring(0, 2), 16);
-  const g = parseInt(hex.substring(2, 4), 16);
-  const b = parseInt(hex.substring(4, 6), 16);
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
 
   if (isNaN(r) || isNaN(g) || isNaN(b)) return "#FFFFFF";
 
-  // Fórmula de luminância perceptiva padrão W3C
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b);
+  const linearize = (c: number) =>
+    c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
 
-  // Acima de 180 o fundo é considerado claro -> texto escuro #111827
-  return luminance > 180 ? "#111827" : "#FFFFFF";
+  const luminance =
+    0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b);
+
+  // Limiar WCAG onde texto escuro (#0F172A) oferece maior razão de contraste que branco
+  return luminance > 0.34 ? "#0F172A" : "#FFFFFF";
 }
 
 /**
- * Gera as variáveis CSS completas da vitrine baseadas no tenant ativo
- * para injeção direta via style={...} evitando qualquer FOUC (Flash of Unstyled Color).
+ * Gera as CSS Custom Properties programáveis da vitrine a partir das cores
+ * salvas pelo lojista no banco de dados (tenant), incluindo tokens derivados
+ * com color-mix() para glassmorphism, sombras tingidas e gradientes sutis.
  */
 export function generateThemeCssVariables(tenant: TenantInfo | null): CSSProperties {
   const primary = tenant?.primary_color || "#084D6E";
   const secondary = tenant?.secondary_color || "#00B4D8";
-  const cta = (tenant?.settings_json as any)?.cta_color || primary;
-  const accent = (tenant?.settings_json as any)?.accent_color || secondary;
+  const settings = (tenant?.settings_json || {}) as Record<string, any>;
+  const cta = settings.cta_color || primary;
+  const accent = settings.accent_color || secondary;
+  const themeKey = settings.theme || "modern_commerce";
+
+  const brandBg =
+    settings.brand_bg ||
+    (themeKey === "clean_minimal"
+      ? "#FAFAFA"
+      : themeKey === "editorial_studio"
+      ? "#FCFCFD"
+      : "#F8FAFC");
+  const brandSurface = settings.brand_surface || "#FFFFFF";
 
   const primaryFg = getContrastColor(primary);
   const secondaryFg = getContrastColor(secondary);
@@ -47,6 +59,18 @@ export function generateThemeCssVariables(tenant: TenantInfo | null): CSSPropert
   const accentFg = getContrastColor(accent);
 
   return {
+    "--brand-primary": primary,
+    "--brand-secondary": secondary,
+    "--brand-bg": brandBg,
+    "--brand-surface": brandSurface,
+    "--brand-text-on-primary": primaryFg,
+    "--brand-text-on-secondary": secondaryFg,
+    "--brand-primary-soft": `color-mix(in srgb, ${primary} 10%, transparent)`,
+    "--brand-primary-border": `color-mix(in srgb, ${primary} 24%, transparent)`,
+    "--brand-primary-glass": `color-mix(in srgb, ${brandSurface} 84%, ${primary} 3%)`,
+    "--brand-shadow-hover": `0 14px 32px -12px color-mix(in srgb, ${primary} 28%, transparent)`,
+    "--brand-cta-gradient": `linear-gradient(135deg, ${primary} 0%, color-mix(in srgb, ${primary} 82%, ${secondary}) 100%)`,
+    // Aliases legados para retrocompatibilidade em toda a vitrine
     "--color-primary": primary,
     "--color-primary-foreground": primaryFg,
     "--color-secondary": secondary,

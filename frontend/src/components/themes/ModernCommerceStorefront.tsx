@@ -57,13 +57,13 @@ export default function ModernCommerceStorefront({
   return (
     <div
       style={state.cssVariables}
-      className="min-h-screen flex flex-col bg-[#F8FAFC] text-slate-900 font-sans selection:bg-[var(--color-primary)] selection:text-white"
+      className="min-h-screen flex flex-col bg-[var(--brand-bg,#F8FAFC)] text-slate-900 font-sans selection:bg-[var(--brand-primary)] selection:text-[var(--brand-text-on-primary)]"
     >
       {/* 1. TOP BAR DINÂMICA */}
       <StorefrontTopBar config={state.homeConfig} theme="modern_commerce" />
 
-      {/* 2. HEADER ESTRUTURADO MODERNO */}
-      <header className="bg-white border-b border-slate-200/80 sticky top-0 z-40 shadow-xs">
+      {/* 2. HEADER ESTRUTURADO MODERNO COM GLASSMORPHISM */}
+      <header className="storefront-glass-header border-b border-slate-200/75 sticky top-0 z-40 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4 sm:gap-8">
           {/* Logo da Loja */}
           <Link href="/" className="flex items-center gap-2 shrink-0 group py-0.5">
@@ -116,17 +116,19 @@ export default function ModernCommerceStorefront({
             <button
               type="button"
               onClick={() => state.setIsCartOpen(true)}
-              style={{
-                backgroundColor: "var(--color-primary)",
-                color: "var(--color-primary-foreground)",
-              }}
-              className="flex items-center gap-2.5 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm hover:opacity-95 active:scale-98 transition-all cursor-pointer"
+              className="storefront-cta-btn flex items-center gap-2.5 text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer"
               title="Abrir carrinho"
             >
               <div className="relative">
                 <FiShoppingCart className="w-4 h-4" />
                 {state.cartCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+                  <span
+                    style={{
+                      backgroundColor: "var(--brand-secondary)",
+                      color: "var(--brand-text-on-secondary)",
+                    }}
+                    className="absolute -top-1.5 -right-2 text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-xs"
+                  >
                     {state.cartCount}
                   </span>
                 )}
@@ -328,13 +330,13 @@ export default function ModernCommerceStorefront({
               return (
                 <div
                   key={prod.id}
-                  className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-2xs hover:shadow-md hover:border-slate-300 transition-all duration-200 flex flex-col justify-between"
+                  className="storefront-card-interactive group rounded-2xl border border-slate-200/80 overflow-hidden shadow-2xs flex flex-col justify-between"
                 >
                   <div>
                     {/* Imagem em aspect-square no topo do card */}
                     <Link
                       href={`/produto/${prod.slug}`}
-                      className="block relative aspect-square w-full bg-slate-50 p-2.5 overflow-hidden"
+                      className="block relative aspect-square w-full bg-slate-50/80 p-3 overflow-hidden"
                     >
                       <img
                         src={imgUrl}
@@ -345,17 +347,23 @@ export default function ModernCommerceStorefront({
                         }}
                       />
 
-                      {/* Badge Pill Translúcido Flutuante */}
+                      {/* Badge Pill com --brand-secondary */}
                       {prod.badge_label && (
-                        <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/90 backdrop-blur-md text-slate-800 border border-slate-200/60 shadow-xs">
-                          🔥 {prod.badge_label}
+                        <span
+                          style={{
+                            backgroundColor: "var(--brand-secondary)",
+                            color: "var(--brand-text-on-secondary)",
+                          }}
+                          className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-xs"
+                        >
+                          {prod.badge_label}
                         </span>
                       )}
 
                       {/* Prazo de Produção no Canto Inferior */}
                       {prod.production_lead_time_days > 0 && (
-                        <span className="absolute bottom-2 right-2 text-[10px] font-semibold bg-slate-900/80 backdrop-blur-md text-white px-2 py-0.5 rounded-md">
-                          ⏱ {prod.production_lead_time_days}d
+                        <span className="absolute bottom-2.5 right-2.5 text-[10px] font-semibold bg-slate-900/80 backdrop-blur-md text-white px-2 py-0.5 rounded-md">
+                          {prod.production_lead_time_days}d úteis
                         </span>
                       )}
                     </Link>
@@ -371,13 +379,19 @@ export default function ModernCommerceStorefront({
                       </div>
 
                       <Link href={`/produto/${prod.slug}`}>
-                        <h3 className="font-heading text-sm font-bold text-slate-900 group-hover:text-[var(--color-primary)] line-clamp-2 transition-colors">
+                        <h3 className="font-heading text-sm font-bold text-slate-900 group-hover:text-[var(--brand-primary)] line-clamp-2 transition-colors">
                           {prod.name}
                         </h3>
                       </Link>
 
                       {wholesaleTag ? (
-                        <span className="inline-block text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                        <span
+                          style={{
+                            backgroundColor: "color-mix(in srgb, var(--brand-primary) 10%, transparent)",
+                            color: "var(--brand-primary)",
+                          }}
+                          className="inline-block text-[11px] font-bold px-2 py-0.5 rounded-md"
+                        >
                           {wholesaleTag}
                         </span>
                       ) : (
@@ -400,11 +414,7 @@ export default function ModernCommerceStorefront({
                     <button
                       type="button"
                       onClick={(e) => state.handleQuickAddToCart(e, prod)}
-                      style={{
-                        backgroundColor: "var(--color-primary)",
-                        color: "var(--color-primary-foreground)",
-                      }}
-                      className="w-full py-2.5 px-4 rounded-xl text-xs font-bold shadow-xs hover:opacity-90 active:scale-98 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="storefront-cta-btn w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <FiPlus className="w-4 h-4" />
                       <span>Adicionar / Comprar</span>

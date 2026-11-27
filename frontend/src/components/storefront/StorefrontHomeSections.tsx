@@ -42,23 +42,26 @@ export function StorefrontTopBar({
 
   const customStyle = tb.useThemePrimary
     ? theme === "clean_minimal"
-      ? undefined
+      ? {
+          backgroundColor: "color-mix(in srgb, var(--brand-surface, #ffffff) 92%, var(--brand-primary) 4%)",
+          borderColor: "color-mix(in srgb, var(--brand-primary) 12%, transparent)",
+        }
       : theme === "editorial_studio"
       ? undefined
       : {
-          backgroundColor: "var(--color-primary)",
-          color: "var(--color-primary-foreground)",
+          background: "var(--brand-cta-gradient, var(--brand-primary))",
+          color: "var(--brand-text-on-primary, #FFFFFF)",
         }
     : {
-        backgroundColor: tb.bgColor || "#084D6E",
-        color: tb.textColor || "#FFFFFF",
+        backgroundColor: tb.bgColor || "var(--brand-primary)",
+        color: tb.textColor || "var(--brand-text-on-primary, #FFFFFF)",
       };
 
   const wrapperClass =
     tb.useThemePrimary && theme === "clean_minimal"
-      ? "bg-white border-b border-neutral-100 text-[11px] text-neutral-600 py-2 px-4"
+      ? "border-b text-[11px] text-neutral-600 py-2 px-4 backdrop-blur-md"
       : tb.useThemePrimary && theme === "editorial_studio"
-      ? "bg-neutral-900 text-neutral-200 text-[11px] py-2 px-4 sm:px-8 tracking-wider"
+      ? "bg-neutral-950 text-neutral-200 text-[11px] py-2 px-4 sm:px-8 tracking-wider"
       : "text-[11px] font-medium py-1.5 px-4 shadow-xs";
 
   return (
@@ -201,20 +204,21 @@ export function StorefrontBenefitsBar({
           return (
             <div
               key={idx}
-              className={`p-4 flex items-center gap-3.5 transition-all ${
+              className={`storefront-card-interactive p-4 flex items-center gap-3.5 ${
                 theme === "clean_minimal"
-                  ? "bg-white rounded-2xl shadow-2xs"
+                  ? "rounded-2xl border border-neutral-200/70 shadow-2xs"
                   : theme === "editorial_studio"
-                  ? "bg-white border border-neutral-200/80 rounded-xl"
-                  : "bg-white rounded-2xl border border-slate-200/80 shadow-2xs"
+                  ? "border border-neutral-200/90 rounded-lg"
+                  : "rounded-2xl border border-slate-200/80 shadow-2xs"
               }`}
             >
               <div
                 style={{
-                  backgroundColor: "color-mix(in srgb, var(--color-primary) 12%, transparent)",
-                  color: "var(--color-primary)",
+                  backgroundColor: "color-mix(in srgb, var(--brand-primary) 12%, transparent)",
+                  color: "var(--brand-primary)",
+                  borderColor: "color-mix(in srgb, var(--brand-primary) 20%, transparent)",
                 }}
-                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                className="w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200"
               >
                 <IconComp className="w-5 h-5" />
               </div>
@@ -222,7 +226,7 @@ export function StorefrontBenefitsBar({
                 <h4 className="font-heading text-xs font-bold text-slate-900 truncate">
                   {item.title}
                 </h4>
-                <p className="text-[11px] text-slate-500 truncate">{item.subtitle}</p>
+                <p className="text-[11px] text-slate-500 truncate mt-0.5">{item.subtitle}</p>
               </div>
             </div>
           );
@@ -244,35 +248,61 @@ export function StorefrontHowItWorks({
 
   return (
     <section
-      className={`py-12 px-4 sm:px-6 my-6 ${
+      style={{ backgroundColor: "var(--brand-surface, #FFFFFF)" }}
+      className={`py-14 px-4 sm:px-6 my-8 ${
         theme === "clean_minimal"
-          ? "bg-white"
-          : "bg-white border-y border-slate-200/80"
+          ? "border-y border-neutral-100"
+          : theme === "editorial_studio"
+          ? "border-y border-neutral-200"
+          : "border-y border-slate-200/80"
       }`}
     >
       <div className="max-w-7xl mx-auto">
-        <div className="text-center max-w-lg mx-auto mb-10">
-          <h3 className="font-heading text-xl font-bold text-slate-900">{hw.title}</h3>
-          <p className="text-xs text-slate-500 mt-1">{hw.subtitle}</p>
+        <div className="text-center max-w-xl mx-auto mb-12">
+          <span
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--brand-primary) 10%, transparent)",
+              color: "var(--brand-primary)",
+            }}
+            className="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mb-2.5"
+          >
+            Como Funciona
+          </span>
+          <h3 className="font-heading text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            {hw.title}
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1.5">{hw.subtitle}</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {hw.steps.map((st, idx) => (
             <div
               key={idx}
-              className="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-2"
+              style={{
+                backgroundColor: "color-mix(in srgb, var(--brand-bg, #F8FAFC) 75%, var(--brand-surface, #FFFFFF))",
+              }}
+              className={`storefront-card-interactive p-6 border space-y-3 relative ${
+                theme === "editorial_studio"
+                  ? "rounded-lg border-neutral-200"
+                  : "rounded-2xl border-slate-200/80"
+              }`}
             >
-              <span
-                style={{
-                  backgroundColor: "var(--color-primary)",
-                  color: "var(--color-primary-foreground)",
-                }}
-                className="w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center"
-              >
-                {st.number}
-              </span>
-              <h4 className="text-xs font-bold text-slate-900">{st.title}</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">{st.description}</p>
+              <div className="flex items-center justify-between">
+                <span
+                  style={{
+                    background: "var(--brand-cta-gradient, var(--brand-primary))",
+                    color: "var(--brand-text-on-primary, #FFFFFF)",
+                  }}
+                  className="w-8 h-8 rounded-xl text-xs font-extrabold flex items-center justify-center shadow-xs"
+                >
+                  {st.number}
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Etapa 0{idx + 1}
+                </span>
+              </div>
+              <h4 className="font-heading text-sm font-bold text-slate-900">{st.title}</h4>
+              <p className="text-xs text-slate-600 leading-relaxed">{st.description}</p>
             </div>
           ))}
         </div>
@@ -304,10 +334,13 @@ export function StorefrontBottomCta({
     <section className="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full mb-8">
       <div
         style={{
-          backgroundColor: cta.bgColor || "var(--color-primary)",
-          color: cta.bgColor ? cta.textColor || "#FFFFFF" : "var(--color-primary-foreground)",
+          background: cta.bgColor
+            ? cta.bgColor
+            : "var(--brand-cta-gradient, var(--brand-primary))",
+          color: cta.bgColor ? cta.textColor || "#FFFFFF" : "var(--brand-text-on-primary, #FFFFFF)",
+          boxShadow: "var(--brand-shadow-hover)",
         }}
-        className="p-8 sm:p-10 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-6"
+        className="p-8 sm:p-10 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-6 relative overflow-hidden"
       >
         <div className="space-y-2 max-w-xl">
           {cta.tag && (
@@ -360,8 +393,11 @@ export function StorefrontFooter({
     .replace("{nome_loja}", storeName);
 
   return (
-    <footer className="bg-white border-t border-slate-200 mt-auto text-xs text-slate-500">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer
+      style={{ backgroundColor: "var(--brand-surface, #FFFFFF)" }}
+      className="border-t border-slate-200/80 mt-auto text-xs text-slate-500"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
         <div className="space-y-3">
           {f.showLogo && logoUrl ? (
             <img src={logoUrl} alt={storeName} className="h-9 w-auto object-contain" />

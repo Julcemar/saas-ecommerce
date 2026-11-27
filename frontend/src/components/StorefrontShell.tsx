@@ -288,7 +288,7 @@ export default function StorefrontShell({
     switch (activeTheme) {
       case "clean_minimal":
         return (
-          <header className="bg-white/90 backdrop-blur-md border-b border-neutral-200/70 sticky top-0 z-40">
+          <header className="storefront-glass-header border-b border-neutral-200/70 sticky top-0 z-40">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-6">
               <Link href="/" className="flex items-center gap-2 shrink-0 group py-0.5">
                 {tenant?.logo_url ? (
@@ -347,7 +347,7 @@ export default function StorefrontShell({
 
       case "editorial_studio":
         return (
-          <header className="bg-white/95 backdrop-blur-md border-b border-neutral-200/80 sticky top-0 z-40">
+          <header className="storefront-glass-header border-b border-neutral-200/80 sticky top-0 z-40">
             <div className="max-w-7xl mx-auto px-4 sm:px-8 py-5 flex items-center justify-between gap-8">
               <Link href="/" className="flex items-center gap-3 shrink-0 group py-0.5">
                 {tenant?.logo_url ? (
@@ -443,7 +443,7 @@ export default function StorefrontShell({
       case "modern_commerce":
       default:
         return (
-          <header className="bg-white border-b border-slate-200/80 sticky top-0 z-40 shadow-xs">
+          <header className="storefront-glass-header border-b border-slate-200/80 sticky top-0 z-40 shadow-xs">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4 sm:gap-8">
               <Link href="/" className="flex items-center gap-2 shrink-0 group py-0.5">
                 {tenant?.logo_url ? (
