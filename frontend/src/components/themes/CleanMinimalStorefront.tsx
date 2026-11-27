@@ -165,7 +165,7 @@ export default function CleanMinimalStorefront({
       </header>
 
       {/* 4. BANNER HERO DINÂMICO */}
-      <StorefrontHero config={state.homeConfig} bannerData={state.bannerData} whatsapp={state.whatsapp} />
+      <StorefrontHero config={state.homeConfig} bannerData={state.bannerData} whatsapp={state.whatsapp} theme="clean_minimal" />
 
       {/* 5. BARRA DE BENEFÍCIOS DINÂMICA */}
       <StorefrontBenefitsBar config={state.homeConfig} theme="clean_minimal" />

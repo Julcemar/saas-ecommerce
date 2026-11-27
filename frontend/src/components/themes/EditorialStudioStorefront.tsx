@@ -165,7 +165,7 @@ export default function EditorialStudioStorefront({
       </header>
 
       {/* 4. HERO BANNER DINÂMICO */}
-      <StorefrontHero config={state.homeConfig} bannerData={state.bannerData} whatsapp={state.whatsapp} />
+      <StorefrontHero config={state.homeConfig} bannerData={state.bannerData} whatsapp={state.whatsapp} theme="editorial_studio" />
 
       {/* 5. PILARES & BENEFÍCIOS DINÂMICOS */}
       <StorefrontBenefitsBar config={state.homeConfig} theme="editorial_studio" />

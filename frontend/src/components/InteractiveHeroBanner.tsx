@@ -46,30 +46,61 @@ export interface BannerData {
 interface InteractiveHeroBannerProps {
   banner?: BannerData | null;
   isPreview?: boolean;
+  theme?: "clean_minimal" | "modern_commerce" | "editorial_studio" | "neo_brutalist";
 }
 
-export default function InteractiveHeroBanner({ banner, isPreview = false }: InteractiveHeroBannerProps) {
-  // Configurações com defaults idênticos ao vídeo oficial
+export default function InteractiveHeroBanner({
+  banner,
+  isPreview = false,
+  theme = "modern_commerce",
+}: InteractiveHeroBannerProps) {
   const config = banner?.config_json || {};
-  const bgStart = config.bg_color_start || "#0052B4";
-  const bgEnd = config.bg_color_end || "#002F6C";
-  const hasHalftone = config.has_halftone_pattern ?? true;
+  const isClean = theme === "clean_minimal";
+  const isEditorial = theme === "editorial_studio";
+  const isNeoBrutalist = theme === "neo_brutalist";
 
-  const badge1Bg = config.badge_1_bg || "#FFD100";
-  const badge1Color = config.badge_1_color || "#000000";
-  const badge2Bg = config.badge_2_bg || "#D92027";
+  const hasCustomBg = Boolean(config.bg_color_start && config.bg_color_start !== "#0052B4");
+  const bgStart = hasCustomBg ? config.bg_color_start! : "var(--brand-primary, #084D6E)";
+  const bgEnd =
+    config.bg_color_end && config.bg_color_end !== "#002F6C"
+      ? config.bg_color_end
+      : "color-mix(in srgb, var(--brand-primary, #084D6E) 68%, #07131F)";
+
+  const hasHalftone = isNeoBrutalist ? (config.has_halftone_pattern ?? true) : false;
+
+  const badge1Bg = config.badge_1_bg && config.badge_1_bg !== "#FFD100"
+    ? config.badge_1_bg
+    : "var(--brand-secondary, #00B4D8)";
+  const badge1Color = config.badge_1_color && config.badge_1_color !== "#000000"
+    ? config.badge_1_color
+    : "var(--brand-text-on-secondary, #0F172A)";
+  const badge2Bg = config.badge_2_bg || "rgba(255,255,255,0.16)";
   const badge2Color = config.badge_2_color || "#FFFFFF";
 
-  const titleHighlightColor = config.title_highlight_color || "#FFD100";
-  const titleSuffixColor = config.title_suffix_color || "#FFFFFF";
-  const descriptionColor = config.description_color || "#E0E7FF";
+  const titleHighlightColor = isClean
+    ? "var(--brand-primary, #084D6E)"
+    : config.title_highlight_color && config.title_highlight_color !== "#FFD100"
+    ? config.title_highlight_color
+    : "var(--brand-secondary, #FFD100)";
+  const titleSuffixColor = isClean
+    ? "#0F172A"
+    : config.title_suffix_color || "#FFFFFF";
+  const descriptionColor = isClean
+    ? "#475569"
+    : config.description_color && config.description_color !== "#E0E7FF"
+    ? config.description_color
+    : "rgba(255, 255, 255, 0.86)";
 
-  const btn1Bg = config.btn_1_bg || "#FFD100";
-  const btn1Color = config.btn_1_color || "#000000";
-  const btn2Bg = config.btn_2_bg || "#FFFFFF";
-  const btn2Color = config.btn_2_color || "#000000";
+  const btn1Bg = config.btn_1_bg && config.btn_1_bg !== "#FFD100"
+    ? config.btn_1_bg
+    : "var(--brand-secondary, #00B4D8)";
+  const btn1Color = config.btn_1_color && config.btn_1_color !== "#000000"
+    ? config.btn_1_color
+    : "var(--brand-text-on-secondary, #0F172A)";
+  const btn2Bg = config.btn_2_bg || "rgba(255, 255, 255, 0.14)";
+  const btn2Color = isClean ? "#0F172A" : "#FFFFFF";
 
-  const checkmarksColor = config.checkmarks_color || "#FFFFFF";
+  const checkmarksColor = isClean ? "#334155" : config.checkmarks_color || "rgba(255,255,255,0.9)";
   const floatingEnabled = config.floating_effect ?? true;
   const speed = config.floating_speed || "normal";
 
@@ -97,16 +128,32 @@ export default function InteractiveHeroBanner({ banner, isPreview = false }: Int
     setTilt({ rotateX: 0, rotateY: 0, scale: 1 });
   };
 
+  const sectionBgStyle = isClean
+    ? {
+        background:
+          "linear-gradient(135deg, color-mix(in srgb, var(--brand-primary, #084D6E) 6%, #FFFFFF) 0%, color-mix(in srgb, var(--brand-secondary, #00B4D8) 8%, #F8FAFC) 100%)",
+      }
+    : isEditorial
+    ? {
+        background:
+          "linear-gradient(135deg, #0F1115 0%, color-mix(in srgb, var(--brand-primary, #084D6E) 35%, #090B0E) 100%)",
+      }
+    : {
+        background: `linear-gradient(135deg, ${bgStart} 0%, ${bgEnd} 100%)`,
+      };
+
   return (
     <section
-      className={`relative w-full overflow-hidden text-white transition-all duration-300 ${
-        isPreview ? "rounded-xl border-2 border-black shadow-[4px_4px_0px_#111111] py-8 sm:py-12 px-4 sm:px-8" : "py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8"
+      className={`relative w-full overflow-hidden transition-all duration-300 ${
+        isClean ? "text-neutral-900 border-b border-neutral-200/70" : "text-white"
+      } ${
+        isPreview
+          ? "rounded-2xl border border-slate-200 shadow-lg py-8 sm:py-12 px-4 sm:px-8"
+          : "py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8"
       }`}
-      style={{
-        background: `linear-gradient(135deg, ${bgStart} 0%, ${bgEnd} 100%)`,
-      }}
+      style={sectionBgStyle}
     >
-      {/* Textura Halftone Pop-Art (pontilhado geométrico fiel ao vídeo) */}
+      {/* Textura Halftone apenas no tema Neo-Brutalist */}
       {hasHalftone && (
         <div
           className="absolute inset-0 pointer-events-none opacity-20"
@@ -117,22 +164,27 @@ export default function InteractiveHeroBanner({ banner, isPreview = false }: Int
         />
       )}
 
-      {/* Brilho radial de fundo para destaque 3D da arte */}
+      {/* Brilho radial suave tingido com a cor secundária da marca */}
       <div
-        className="absolute right-0 top-1/2 -translate-y-1/2 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] rounded-full pointer-events-none opacity-30"
+        className="absolute right-0 top-1/2 -translate-y-1/2 w-[320px] sm:w-[540px] h-[320px] sm:h-[540px] rounded-full pointer-events-none opacity-35 blur-2xl"
         style={{
-          background: "radial-gradient(circle, rgba(0, 180, 216, 0.5) 0%, transparent 70%)",
+          background:
+            "radial-gradient(circle, color-mix(in srgb, var(--brand-secondary, #00B4D8) 45%, transparent) 0%, transparent 70%)",
         }}
       />
 
       <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
         {/* Coluna Esquerda: Textos, Badges, Botões e Checkmarks (7 colunas) */}
         <div className="lg:col-span-7 space-y-5 text-left">
-          {/* Badges de Destaque Pop-Art */}
+          {/* Badges de Destaque */}
           <div className="flex flex-wrap items-center gap-2">
             {banner?.badge_1 && (
               <span
-                className="text-[11px] font-black uppercase px-3 py-1 rounded-full border-2 border-black shadow-[2px_2px_0px_#000] inline-flex items-center gap-1"
+                className={
+                  isNeoBrutalist
+                    ? "text-[11px] font-black uppercase px-3 py-1 rounded-full border-2 border-black shadow-[2px_2px_0px_#000] inline-flex items-center gap-1"
+                    : "text-[11px] font-bold uppercase tracking-wider px-3.5 py-1 rounded-full shadow-xs inline-flex items-center gap-1.5"
+                }
                 style={{ backgroundColor: badge1Bg, color: badge1Color }}
               >
                 {banner.badge_1}
@@ -140,8 +192,14 @@ export default function InteractiveHeroBanner({ banner, isPreview = false }: Int
             )}
             {banner?.badge_2 && (
               <span
-                className="text-[10px] font-black uppercase px-2.5 py-1 rounded-full border-2 border-black shadow-[2px_2px_0px_#000] tracking-wider"
-                style={{ backgroundColor: badge2Bg, color: badge2Color }}
+                className={
+                  isNeoBrutalist
+                    ? "text-[10px] font-black uppercase px-2.5 py-1 rounded-full border-2 border-black shadow-[2px_2px_0px_#000] tracking-wider"
+                    : isClean
+                    ? "text-[10px] font-bold uppercase px-3 py-1 rounded-full border border-neutral-200 bg-white text-neutral-700 tracking-wider"
+                    : "text-[10px] font-bold uppercase px-3 py-1 rounded-full backdrop-blur-md border border-white/25 tracking-wider"
+                }
+                style={isClean ? undefined : { backgroundColor: badge2Bg, color: badge2Color }}
               >
                 {banner.badge_2}
               </span>
@@ -149,11 +207,11 @@ export default function InteractiveHeroBanner({ banner, isPreview = false }: Int
           </div>
 
           {/* Título Principal de Alto Impacto */}
-          <h1 className="font-heading font-black tracking-tight leading-[1.1] text-3xl sm:text-4xl lg:text-5xl drop-shadow-sm">
-            <span className="block mb-1" style={{ color: titleHighlightColor }}>
+          <h1 className="font-heading font-extrabold tracking-tight leading-[1.08] text-3xl sm:text-4xl lg:text-5xl">
+            <span className="block mb-1.5" style={{ color: titleHighlightColor }}>
               {banner?.title_highlight || "Sua Marca Sempre Presente!"}
             </span>
-            <span className="block" style={{ color: titleSuffixColor }}>
+            <span className="block font-bold" style={{ color: titleSuffixColor }}>
               {banner?.title_suffix || "Brindes Corporativos e Presentes Sob Medida"}
             </span>
           </h1>
@@ -168,13 +226,25 @@ export default function InteractiveHeroBanner({ banner, isPreview = false }: Int
             </p>
           )}
 
-          {/* Botões de Ação (CTAs) Estilo Pop-Art */}
+          {/* Botões de Ação (CTAs) */}
           <div className="flex flex-wrap items-center gap-3 pt-2">
             {banner?.btn_1_text && (
               <a
                 href={banner.btn_1_url || "#catalogo"}
-                className="font-heading font-black text-xs sm:text-sm py-3 px-6 rounded-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:scale-105 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all uppercase inline-flex items-center gap-2"
-                style={{ backgroundColor: btn1Bg, color: btn1Color }}
+                className={
+                  isNeoBrutalist
+                    ? "font-heading font-black text-xs sm:text-sm py-3 px-6 rounded-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:scale-105 transition-all uppercase inline-flex items-center gap-2"
+                    : isClean
+                    ? "storefront-cta-btn font-heading font-semibold text-xs sm:text-sm py-3.5 px-7 rounded-full inline-flex items-center gap-2"
+                    : isEditorial
+                    ? "font-heading font-bold text-xs sm:text-sm py-3.5 px-7 rounded-lg tracking-wider uppercase shadow-lg hover:-translate-y-0.5 transition-all inline-flex items-center gap-2"
+                    : "font-heading font-bold text-xs sm:text-sm py-3.5 px-7 rounded-xl shadow-lg hover:-translate-y-0.5 hover:brightness-105 active:scale-98 transition-all inline-flex items-center gap-2"
+                }
+                style={
+                  isClean
+                    ? undefined
+                    : { backgroundColor: btn1Bg, color: btn1Color }
+                }
               >
                 <span>{banner.btn_1_text}</span>
               </a>
@@ -185,8 +255,14 @@ export default function InteractiveHeroBanner({ banner, isPreview = false }: Int
                 href={banner.btn_2_url || "https://wa.me/5541997098905"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-heading font-black text-xs sm:text-sm py-3 px-5 rounded-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:scale-105 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all uppercase inline-flex items-center gap-2"
-                style={{ backgroundColor: btn2Bg, color: btn2Color }}
+                className={
+                  isNeoBrutalist
+                    ? "font-heading font-black text-xs sm:text-sm py-3 px-5 rounded-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:scale-105 transition-all uppercase inline-flex items-center gap-2"
+                    : isClean
+                    ? "font-heading font-semibold text-xs sm:text-sm py-3.5 px-6 rounded-full bg-white border border-neutral-300 hover:border-neutral-400 hover:bg-neutral-50 transition-all inline-flex items-center gap-2"
+                    : "font-heading font-semibold text-xs sm:text-sm py-3.5 px-6 rounded-xl backdrop-blur-md border border-white/25 hover:bg-white/25 transition-all inline-flex items-center gap-2"
+                }
+                style={isClean ? { color: btn2Color } : { backgroundColor: btn2Bg, color: btn2Color }}
               >
                 <span>{banner.btn_2_text}</span>
               </a>

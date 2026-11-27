@@ -115,10 +115,12 @@ export function StorefrontHero({
   config,
   bannerData,
   whatsapp,
+  theme = "modern_commerce",
 }: {
   config: StoreHomeConfig;
   bannerData: BannerData | null;
   whatsapp: string;
+  theme?: ThemeVariant;
 }) {
   const h = config.hero;
   if (!h.enabled) return null;
@@ -172,7 +174,7 @@ export function StorefrontHero({
   return (
     <section className="w-full">
       <div className="w-full">
-        <InteractiveHeroBanner banner={mergedBanner} />
+        <InteractiveHeroBanner banner={mergedBanner} theme={theme} />
       </div>
     </section>
   );

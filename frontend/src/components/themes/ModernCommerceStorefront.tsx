@@ -202,7 +202,7 @@ export default function ModernCommerceStorefront({
       </header>
 
       {/* 4. HERO BANNER DINÂMICO */}
-      <StorefrontHero config={state.homeConfig} bannerData={state.bannerData} whatsapp={state.whatsapp} />
+      <StorefrontHero config={state.homeConfig} bannerData={state.bannerData} whatsapp={state.whatsapp} theme="modern_commerce" />
 
       {/* 5. BARRA DE BENEFÍCIOS DINÂMICA */}
       <StorefrontBenefitsBar config={state.homeConfig} theme="modern_commerce" />
